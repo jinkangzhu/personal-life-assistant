@@ -59,7 +59,7 @@ pnpm build
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `DATABASE_URL` | 是 | SQLite 路径。本地：`file:./data/app.db`；Docker：`file:/app/data/app.db` |
+| `DATABASE_URL` | 是 | SQLite 路径。本地：`file:../data/app.db`（相对 `prisma/schema.prisma`）；Docker：`file:/app/data/app.db` |
 | `JWT_SECRET` | 是 | JWT 签名密钥，生产环境必须使用强随机字符串 |
 | `JWT_EXPIRES_IN` | 否 | Token 有效期，默认 `30d` |
 | `PASSWORD_RESET_SECRET` | 否 | 开发者密码重置密钥（至少 16 位）。配置后可通过 `/reset-password` 重置密码；留空则禁用 |

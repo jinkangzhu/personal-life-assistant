@@ -149,7 +149,7 @@ docker compose up -d --build
 
 | 变量 | 说明 |
 |------|------|
-| `DATABASE_URL` | `file:./data/app.db` |
+| `DATABASE_URL` | `file:../data/app.db`（本地）；`file:/app/data/app.db`（Docker） |
 | `JWT_SECRET` | 随机长字符串 |
 | `NODE_ENV` | `production` |
 
