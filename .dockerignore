@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+data
+.env
+.env.local
+*.md
+!README.md
+.cursor
+terminals
+coverage
+.DS_Store
+Thumbs.db

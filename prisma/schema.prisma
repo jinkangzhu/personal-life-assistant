@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String?  @map("display_name")
+  avatarKey    String?  @map("avatar_key")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  diaryEntries DiaryEntry[]
+  todos        Todo[]
+  recurringTodos RecurringTodo[]
+  plans        Plan[]
+  reviews      Review[]
+  notes        Note[]
+  goals        LongTermGoal[]
+  tags         Tag[]
+  categories   Category[]
+  tagRelations TagRelation[]
+
+  @@map("users")
+}
+
+model DiaryEntry {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  date      DateTime
+  title     String?
+  content   String   @default("")
+  mood      Mood?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("diary_entries")
+}
+
+model Todo {
+  id              String     @id @default(uuid())
+  userId          String     @map("user_id")
+  planId          String?    @map("plan_id")
+  title           String
+  description     String?
+  dueDate         DateTime?  @map("due_date")
+  priority        Priority   @default(MEDIUM)
+  status          TodoStatus @default(PENDING)
+  completionNote  String?    @map("completion_note")
+  completedAt     DateTime?  @map("completed_at")
+  sortOrder       Int        @default(0) @map("sort_order")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([userId, sortOrder])
+  @@map("todos")
+}
+
+model RecurringTodo {
+  id             String         @id @default(uuid())
+  userId         String         @map("user_id")
+  planId         String?        @map("plan_id")
+  title          String
+  description    String?
+  priority       Priority       @default(MEDIUM)
+  recurrenceType RecurrenceType @map("recurrence_type")
+  weeklyDays     String?        @map("weekly_days")
+  monthlyDay     Int?           @map("monthly_day")
+  startDate      DateTime?      @map("start_date")
+  endDate        DateTime?      @map("end_date")
+  active         Boolean        @default(true)
+  deletedAt      DateTime?      @map("deleted_at")
+  sortOrder      Int            @default(0) @map("sort_order")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan?            @relation(fields: [planId], references: [id], onDelete: SetNull)
+  occurrences TodoOccurrence[]
+
+  @@index([userId, active])
+  @@index([userId, planId])
+  @@index([userId, sortOrder])
+  @@map("recurring_todos")
+}
+
+model TodoOccurrence {
+  id              String           @id @default(uuid())
+  recurringTodoId String           @map("recurring_todo_id")
+  periodDate      DateTime         @map("period_date")
+  status          OccurrenceStatus @default(PENDING)
+  completionNote  String?          @map("completion_note")
+  completedAt     DateTime?        @map("completed_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  recurringTodo RecurringTodo @relation(fields: [recurringTodoId], references: [id], onDelete: Cascade)
+
+  @@unique([recurringTodoId, periodDate])
+  @@index([recurringTodoId, periodDate])
+  @@map("todo_occurrences")
+}
+
+model Plan {
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  title       String
+  description String?
+  type        PlanType   @default(SHORT_TERM)
+  startDate   DateTime?  @map("start_date")
+  endDate     DateTime?  @map("end_date")
+  status      PlanStatus @default(ACTIVE)
+  sortOrder   Int        @default(0) @map("sort_order")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  todos Todo[]
+  recurringTodos RecurringTodo[]
+  goals GoalPlan[]
+
+  @@index([userId, status])
+  @@index([userId, sortOrder])
+  @@map("plans")
+}
+
+model Review {
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  periodType ReviewPeriodType @default(DAILY) @map("period_type")
+  periodDate DateTime     @map("period_date")
+  content    String       @default("")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodType, periodDate])
+  @@index([userId, periodDate])
+  @@map("reviews")
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  title      String
+  content    String   @default("")
+  categoryId String?  @map("category_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("notes")
+}
+
+model LongTermGoal {
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  title       String
+  description String?
+  status      GoalStatus @default(ACTIVE)
+  sortOrder   Int        @default(0) @map("sort_order")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plans GoalPlan[]
+
+  @@index([userId, status])
+  @@index([userId, sortOrder])
+  @@map("long_term_goals")
+}
+
+model GoalPlan {
+  goalId String @map("goal_id")
+  planId String @map("plan_id")
+
+  goal LongTermGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  plan Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@id([goalId, planId])
+  @@map("goal_plans")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  color     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relations TagRelation[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model TagRelation {
+  id         String     @id @default(uuid())
+  userId     String     @map("user_id")
+  tagId      String     @map("tag_id")
+  entityType EntityType @map("entity_type")
+  entityId   String     @map("entity_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, entityType, entityId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("tag_relations")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes Note[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+enum Mood {
+  HAPPY
+  CALM
+  ANXIOUS
+  TIRED
+  OTHER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TodoStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum OccurrenceStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+enum PlanType {
+  SHORT_TERM
+  LONG_TERM
+}
+
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ReviewPeriodType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+enum EntityType {
+  DIARY
+  TODO
+  NOTE
+  PLAN
+  REVIEW
+  GOAL
+}
