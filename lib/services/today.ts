@@ -1,10 +1,6 @@
 import { prisma } from "@/lib/db";
-import {
-  getRecurringTodosForDate,
-  toDisplayTodoFromOneTime,
-  type DisplayTodoItem,
-} from "@/lib/services/recurring-todo";
-import { isTodoOverdue } from "@/lib/services/todo";
+import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
+import { isTodoOverdue, listDisplayTodos } from "@/lib/services/todo";
 import { endOfDay, startOfDay } from "@/lib/utils";
 import { TodoStatus } from "@prisma/client";
 
@@ -32,42 +28,24 @@ export function splitTodayDisplayTodos(
 export async function getTodayBundle(userId: string, date: Date = new Date()) {
   const dayStart = startOfDay(date);
 
-  const [diaryEntries, todayOneTimeTodos, recurringToday, overdueTodos] =
-    await Promise.all([
-      prisma.diaryEntry.findMany({
-        where: {
-          userId,
-          date: { gte: dayStart, lte: endOfDay(date) },
-        },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.todo.findMany({
-        where: {
-          userId,
-          status: { not: TodoStatus.CANCELLED },
-          OR: [
-            { dueDate: { gte: dayStart, lte: endOfDay(date) } },
-            {
-              dueDate: { lt: dayStart },
-              status: TodoStatus.PENDING,
-            },
-          ],
-        },
-        orderBy: [{ sortOrder: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
-        include: { plan: { select: { id: true, title: true } } },
-      }),
-      getRecurringTodosForDate(userId, date),
-      prisma.todo.count({
-        where: {
-          userId,
-          status: TodoStatus.PENDING,
-          dueDate: { lt: dayStart },
-        },
-      }),
-    ]);
+  const [diaryEntries, todos, overdueCount] = await Promise.all([
+    prisma.diaryEntry.findMany({
+      where: {
+        userId,
+        date: { gte: dayStart, lte: endOfDay(date) },
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    listDisplayTodos(userId, "today", date),
+    prisma.todo.count({
+      where: {
+        userId,
+        status: TodoStatus.PENDING,
+        dueDate: { lt: dayStart },
+      },
+    }),
+  ]);
 
-  const oneTimeDisplay = todayOneTimeTodos.map(toDisplayTodoFromOneTime);
-  const todos: DisplayTodoItem[] = [...oneTimeDisplay, ...recurringToday];
   const pendingTodos = todos.filter((t) => t.status === TodoStatus.PENDING);
   const doneTodos = todos.filter((t) => t.status === TodoStatus.COMPLETED);
   const { todayDueTodos, overdueTodos: overdueTodoList } = splitTodayDisplayTodos(
@@ -86,7 +64,7 @@ export async function getTodayBundle(userId: string, date: Date = new Date()) {
     overdueTodos: overdueTodoList,
     pendingTodos,
     doneTodos,
-    overdueCount: overdueTodos,
+    overdueCount,
     stats: {
       completedToday,
       totalToday,

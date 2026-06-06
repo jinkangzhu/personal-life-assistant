@@ -110,7 +110,14 @@ export function TodoList({
   const [, startTransition] = useTransition();
   const [reorderError, setReorderError] = useState("");
   const sensors = useSortableListSensors();
-  const sortable = filter === "all";
+  const sortable =
+    filter === "all" || filter === "pending" || filter === "today";
+  const reorderScope =
+    filter === "pending"
+      ? "pending"
+      : filter === "today"
+        ? "today"
+        : "all";
 
   const initialItems = useMemo(() => dedupeSortableTodos(todos), [todos]);
   const [items, setItems] = useState(initialItems);
@@ -139,6 +146,7 @@ export function TodoList({
     startTransition(async () => {
       const result = await reorderTodosAction(
         nextItems.map((item) => toReorderItem(getTodoSortableId(item))),
+        reorderScope,
       );
       if (result.ok) {
         router.refresh();
@@ -190,7 +198,9 @@ export function TodoList({
 
       {reorderError && <p className="text-sm text-red-400">{reorderError}</p>}
       <p className="text-xs text-[var(--color-muted)]">
-        未绑定计划的待办默认排在前面；拖拽后以手动顺序为准。
+        {filter === "today"
+          ? "默认未完成在上、已完成在下，同状态按紧急程度排序；拖拽后以手动顺序为准。"
+          : "未绑定计划的待办默认排在前面；拖拽后以手动顺序为准。"}
       </p>
     </div>
   );

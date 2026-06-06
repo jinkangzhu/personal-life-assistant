@@ -11,7 +11,8 @@ import { startOfDay } from "@/lib/utils";
 
 import type { Plan, Todo } from "@prisma/client";
 
-import { Prisma, TodoStatus } from "@prisma/client";
+import { PlanStatus, Prisma, TodoStatus } from "@prisma/client";
+import type { PlanFilter } from "@/lib/validators/plan";
 
 
 
@@ -115,11 +116,31 @@ const listTodoSelect = {
 
 
 
-export async function listPlans(userId: string): Promise<PlanWithProgress[]> {
+export function buildPlanFilterWhere(
+  userId: string,
+  filter: PlanFilter,
+): Prisma.PlanWhereInput {
+  switch (filter) {
+    case "completed":
+      return { userId, status: PlanStatus.COMPLETED };
+    case "archived":
+      return { userId, status: PlanStatus.ARCHIVED };
+    case "pending":
+      return { userId, status: PlanStatus.ACTIVE };
+    case "all":
+    default:
+      return { userId };
+  }
+}
+
+export async function listPlans(
+  userId: string,
+  filter: PlanFilter = "pending",
+): Promise<PlanWithProgress[]> {
   await backfillPlanSortOrders(userId);
 
   const plans = await prisma.plan.findMany({
-    where: { userId },
+    where: buildPlanFilterWhere(userId, filter),
     include: { todos: listTodoSelect },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });

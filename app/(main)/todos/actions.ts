@@ -12,7 +12,12 @@ import {
   updateRecurringOccurrenceNote,
   updateRecurringTodo,
 } from "@/lib/services/recurring-todo";
-import { getOwnedTodo, nextTodoSortOrder, reorderTodos } from "@/lib/services/todo";
+import {
+  getOwnedTodo,
+  nextTodoSortOrder,
+  reorderTodayTodos,
+  reorderTodos,
+} from "@/lib/services/todo";
 import type { TodoReorderItem } from "@/lib/services/sort-order";
 import { requireSession } from "@/lib/session";
 import { parseDateInput } from "@/lib/utils";
@@ -159,6 +164,17 @@ export async function updateRecurringTodoAction(id: string, formData: FormData) 
     });
 
     await updateRecurringTodo(session.id, id, parsed);
+
+    if (raw.periodDate) {
+      const note = z.string().trim().max(2000).parse(raw.completionNote ?? "");
+      await updateRecurringOccurrenceNote(
+        session.id,
+        id,
+        raw.periodDate,
+        note,
+      );
+    }
+
     revalidateTodoPaths(id, existing.planId);
     return { ok: true as const };
   } catch (error) {
@@ -344,11 +360,18 @@ export async function toggleRecurringTodoStatus(
   }
 }
 
-export async function reorderTodosAction(orderedItems: TodoReorderItem[]) {
+export async function reorderTodosAction(
+  orderedItems: TodoReorderItem[],
+  scope: "all" | "pending" | "today" = "all",
+) {
   const session = await requireSession();
 
   try {
-    await reorderTodos(session.id, orderedItems);
+    if (scope === "today") {
+      await reorderTodayTodos(session.id, orderedItems);
+    } else {
+      await reorderTodos(session.id, orderedItems, scope);
+    }
     revalidateTodoPaths();
     return { ok: true as const };
   } catch (error) {

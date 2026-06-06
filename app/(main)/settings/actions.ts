@@ -9,6 +9,11 @@ import {
 } from "@/lib/services/category";
 import { createTag, deleteTag, updateTag } from "@/lib/services/tag";
 import {
+  removeUserWallpaper,
+  updateUserWallpaperPreference,
+  uploadUserWallpaper,
+} from "@/lib/services/wallpaper";
+import {
   changeUserPassword,
   removeUserAvatar,
   updateUserDisplayName,
@@ -21,7 +26,10 @@ import {
 } from "@/lib/validators/category";
 import {
   changePasswordSchema,
+  clampWallpaperOverlay,
+  parseWallpaperPreference,
   updateDisplayNameSchema,
+  type WallpaperPreference,
 } from "@/lib/validators/settings";
 import { tagCreateSchema, tagUpdateSchema } from "@/lib/validators/tag";
 import { z } from "zod";
@@ -95,6 +103,69 @@ export async function removeAvatarAction() {
     return { ok: true as const };
   } catch (error) {
     console.error("removeAvatarAction error:", error);
+    return { ok: false as const, error: "移除失败" };
+  }
+}
+
+export async function updateWallpaperPreferenceAction(
+  preference: WallpaperPreference,
+  overlay: number,
+) {
+  const session = await requireSession();
+
+  try {
+    const parsedPreference = parseWallpaperPreference(preference);
+    const parsedOverlay = clampWallpaperOverlay(overlay);
+
+    await updateUserWallpaperPreference(
+      session.id,
+      parsedPreference,
+      parsedOverlay,
+    );
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Error && error.message === "WALLPAPER_FILE_MISSING") {
+      return { ok: false as const, error: "请先上传自定义壁纸" };
+    }
+    console.error("updateWallpaperPreferenceAction error:", error);
+    return { ok: false as const, error: "保存失败" };
+  }
+}
+
+export async function uploadWallpaperAction(formData: FormData) {
+  const session = await requireSession();
+
+  try {
+    const file = formData.get("wallpaper");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false as const, error: "请选择图片" };
+    }
+
+    await uploadUserWallpaper(session.id, file);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Error && error.message === "WALLPAPER_TOO_LARGE") {
+      return { ok: false as const, error: "图片不能超过 5MB" };
+    }
+    if (error instanceof Error && error.message === "WALLPAPER_INVALID_TYPE") {
+      return { ok: false as const, error: "仅支持 JPG、PNG、WebP" };
+    }
+    console.error("uploadWallpaperAction error:", error);
+    return { ok: false as const, error: "上传失败" };
+  }
+}
+
+export async function removeWallpaperAction() {
+  const session = await requireSession();
+
+  try {
+    await removeUserWallpaper(session.id);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    console.error("removeWallpaperAction error:", error);
     return { ok: false as const, error: "移除失败" };
   }
 }

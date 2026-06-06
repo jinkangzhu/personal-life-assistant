@@ -18,6 +18,9 @@ export async function getSession() {
       email: true,
       displayName: true,
       avatarKey: true,
+      wallpaperPreference: true,
+      wallpaperOverlay: true,
+      wallpaperKey: true,
       updatedAt: true,
     },
   });

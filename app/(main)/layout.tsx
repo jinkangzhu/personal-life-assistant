@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/session";
 import { AppShell } from "@/components/layout/app-shell";
+import { WallpaperSync } from "@/components/wallpaper-sync";
 
 export default async function MainLayout({
   children,
@@ -8,5 +9,10 @@ export default async function MainLayout({
 }) {
   const session = await requireSession();
 
-  return <AppShell user={session}>{children}</AppShell>;
+  return (
+    <>
+      <WallpaperSync user={session} />
+      <AppShell user={session}>{children}</AppShell>
+    </>
+  );
 }

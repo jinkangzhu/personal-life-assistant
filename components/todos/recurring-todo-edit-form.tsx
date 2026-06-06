@@ -9,7 +9,7 @@ import {
   updateRecurringTodoAction,
 } from "@/app/(main)/todos/actions";
 import { formatRecurrenceLabel, parseWeeklyDays } from "@/lib/recurrence";
-import type { RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
+import type { DisplayTodoItem, RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
 import { toDateInputValue } from "@/lib/utils";
 import { RecurrenceType } from "@prisma/client";
 import { WeekdayPicker } from "@/components/todos/weekday-picker";
@@ -25,10 +25,12 @@ const textareaClassName =
 
 export function RecurringTodoEditForm({
   todo,
+  currentPeriod,
   onCancel,
   onSaved,
 }: {
   todo: RecurringTodoWithPlan;
+  currentPeriod?: DisplayTodoItem | null;
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -140,6 +142,35 @@ export function RecurringTodoEditForm({
           monthlyDay: todo.monthlyDay,
         })}
       </p>
+
+      {currentPeriod?.periodDate && (
+        <>
+          <input
+            type="hidden"
+            name="periodDate"
+            value={toDateInputValue(currentPeriod.periodDate)}
+          />
+          <div>
+            <label
+              htmlFor="completionNote"
+              className="mb-1.5 block text-sm text-[var(--color-muted)]"
+            >
+              完成说明
+              <span className="ml-1.5 text-xs">
+                （{toDateInputValue(currentPeriod.periodDate)}）
+              </span>
+            </label>
+            <textarea
+              id="completionNote"
+              name="completionNote"
+              rows={3}
+              defaultValue={currentPeriod.completionNote ?? ""}
+              placeholder="记录完成情况，或未完成的原因…"
+              className={textareaClassName}
+            />
+          </div>
+        </>
+      )}
 
       <FormError message={error} />
 

@@ -17,6 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { reorderPlansAction } from "@/app/(main)/plans/actions";
+import { PlanItem } from "@/components/plans/plan-item";
 import { PlanProgressBar } from "@/components/plans/plan-progress";
 import { EmptyState } from "@/components/ui/card";
 import type { PlanWithProgress } from "@/lib/services/plan";
@@ -24,6 +25,7 @@ import { useSortableListSensors } from "@/lib/utils/sortable-list";
 import {
   PLAN_STATUS_LABELS,
   PLAN_TYPE_LABELS,
+  type PlanFilter,
 } from "@/lib/validators/plan";
 import { cn } from "@/lib/utils";
 
@@ -110,12 +112,38 @@ function SortablePlanItem({ plan }: { plan: PlanWithProgress }) {
   );
 }
 
-export function PlanList({ plans }: { plans: PlanWithProgress[] }) {
+const emptyStateMessages: Record<PlanFilter, { title: string; description?: string }> = {
+  pending: {
+    title: "暂无进行中的计划",
+    description: "切换筛选条件或创建新计划",
+  },
+  completed: {
+    title: "暂无已完成的计划",
+    description: "切换筛选条件查看其他计划",
+  },
+  archived: {
+    title: "暂无已归档的计划",
+    description: "切换筛选条件查看其他计划",
+  },
+  all: {
+    title: "暂无计划，创建第一个计划开始拆解目标吧",
+  },
+};
+
+export function PlanList({
+  plans,
+  filter,
+}: {
+  plans: PlanWithProgress[];
+  filter: PlanFilter;
+}) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [items, setItems] = useState(plans);
   const [reorderError, setReorderError] = useState("");
   const sensors = useSortableListSensors();
+  const sortable = filter === "all" || filter === "pending";
+  const reorderScope = filter === "pending" ? "pending" : "all";
 
   useEffect(() => {
     setItems(plans);
@@ -135,7 +163,10 @@ export function PlanList({ plans }: { plans: PlanWithProgress[] }) {
     setReorderError("");
 
     startTransition(async () => {
-      const result = await reorderPlansAction(nextItems.map((item) => item.id));
+      const result = await reorderPlansAction(
+        nextItems.map((item) => item.id),
+        reorderScope,
+      );
       if (result.ok) {
         router.refresh();
         return;
@@ -145,12 +176,24 @@ export function PlanList({ plans }: { plans: PlanWithProgress[] }) {
     });
   }
 
-  if (items.length === 0) {
+  if (plans.length === 0) {
+    const emptyState = emptyStateMessages[filter];
     return (
       <EmptyState
         variant="dashed"
-        title="暂无计划，创建第一个计划开始拆解目标吧"
+        title={emptyState.title}
+        description={emptyState.description}
       />
+    );
+  }
+
+  if (!sortable) {
+    return (
+      <ul className="space-y-2">
+        {plans.map((plan) => (
+          <PlanItem key={plan.id} plan={plan} />
+        ))}
+      </ul>
     );
   }
 

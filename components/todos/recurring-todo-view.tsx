@@ -1,13 +1,15 @@
 import { formatRecurrenceLabel, parseWeeklyDays } from "@/lib/recurrence";
-import type { RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
+import type { DisplayTodoItem, RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
 import { formatShortDate } from "@/lib/utils";
 import { RECURRENCE_TYPE_LABELS } from "@/lib/validators/recurring-todo";
 import { PRIORITY_LABELS } from "@/lib/validators/todo";
+import { TodoCompletionNote } from "@/components/today/todo-completion-note";
 import { PriorityBadge } from "@/components/todos/priority-badge";
 import { RecurrenceBadge } from "@/components/todos/recurrence-badge";
 
 export function RecurringTodoView({
   todo,
+  currentPeriod,
 }: {
   todo: RecurringTodoWithPlan & {
     occurrences?: Array<{
@@ -18,6 +20,7 @@ export function RecurringTodoView({
       completedAt: Date | null;
     }>;
   };
+  currentPeriod?: DisplayTodoItem | null;
 }) {
   const recurrenceLabel = formatRecurrenceLabel({
     recurrenceType: todo.recurrenceType,
@@ -62,6 +65,18 @@ export function RecurringTodoView({
         <section>
           <h3 className="mb-1.5 text-xs text-[var(--color-muted)]">描述</h3>
           <p className="whitespace-pre-wrap text-sm">{todo.description}</p>
+        </section>
+      )}
+
+      {currentPeriod && (
+        <section>
+          <h3 className="mb-1.5 text-xs text-[var(--color-muted)]">
+            完成说明
+            <span className="ml-1.5 font-normal">
+              （{formatShortDate(currentPeriod.periodDate)}）
+            </span>
+          </h3>
+          <TodoCompletionNote todo={currentPeriod} className="mt-0" />
         </section>
       )}
 

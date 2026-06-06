@@ -435,3 +435,25 @@ export function recurringTemplatesToDisplayItems(
     recurringPaused: !todo.active,
   }));
 }
+
+export function getCurrentPeriodDisplayTodo(
+  todo: RecurringTodoWithPlan & {
+    occurrences: Array<{
+      periodDate: Date;
+      status: OccurrenceStatus;
+      completionNote: string | null;
+    }>;
+  },
+  refDate: Date = new Date(),
+): DisplayTodoItem | null {
+  const dayStart = startOfDay(refDate);
+  if (!recurringTodoAppliesOnDate(toSchedule(todo), dayStart)) {
+    return null;
+  }
+
+  const occurrence = todo.occurrences.find(
+    (item) => toDateKey(item.periodDate) === toDateKey(dayStart),
+  );
+
+  return toDisplayTodoFromRecurring(todo, dayStart, occurrence ?? null);
+}

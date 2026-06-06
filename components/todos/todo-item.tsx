@@ -3,6 +3,7 @@ import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
 import { isDisplayTodoOverdue } from "@/lib/services/todo";
 import { cn, formatShortDate } from "@/lib/utils";
 import { TodoStatus } from "@prisma/client";
+import { TodoCompletionNote } from "@/components/today/todo-completion-note";
 import { PriorityBadge } from "./priority-badge";
 import { RecurrenceBadge } from "./recurrence-badge";
 import { TodoCheckbox } from "./todo-checkbox";
@@ -79,6 +80,10 @@ export function TodoItem({
             <span className="line-clamp-1">说明：{todo.completionNote}</span>
           )}
         </div>
+
+        {todo.periodDate && todo.status === TodoStatus.PENDING && (
+          <TodoCompletionNote todo={todo} />
+        )}
       </div>
     </Wrapper>
   );

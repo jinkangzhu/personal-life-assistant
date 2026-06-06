@@ -10,11 +10,12 @@ export default async function DiaryPage() {
   const groups = groupDiariesByDate(entries);
 
   return (
-    <PageShell title="日记" description="按日期浏览已写好的日记">
+    <PageShell
+      title="日记"
+      description="按日期浏览已写好的日记"
+      action={<DiaryWriteButton />}
+    >
       <DiaryList groups={groups} />
-      <div className="flex justify-center pt-4">
-        <DiaryWriteButton />
-      </div>
     </PageShell>
   );
 }

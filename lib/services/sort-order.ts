@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/db";
+import { PlanStatus, TodoStatus } from "@prisma/client";
+
+export type ReorderScope = "all" | "pending" | "today";
 
 export function needsSortOrderBackfill<T extends { sortOrder: number }>(
   items: T[],
@@ -229,18 +232,7 @@ export async function reorderGoals(userId: string, orderedIds: string[]) {
   );
 }
 
-export async function reorderPlans(userId: string, orderedIds: string[]) {
-  const plans = await prisma.plan.findMany({
-    where: { userId },
-    select: { id: true },
-  });
-
-  await validateOwnedIds(
-    new Set(plans.map((plan) => plan.id)),
-    orderedIds,
-    plans.length,
-  );
-
+async function applyPlanSortOrder(orderedIds: string[]) {
   await prisma.$transaction(
     orderedIds.map((id, index) =>
       prisma.plan.update({
@@ -251,43 +243,89 @@ export async function reorderPlans(userId: string, orderedIds: string[]) {
   );
 }
 
-export async function reorderTodos(userId: string, orderedItems: TodoReorderItem[]) {
+export async function reorderPlans(
+  userId: string,
+  orderedIds: string[],
+  scope: ReorderScope = "all",
+) {
+  const plans = await prisma.plan.findMany({
+    where: { userId },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, status: true },
+  });
+
+  if (scope === "all") {
+    await validateOwnedIds(
+      new Set(plans.map((plan) => plan.id)),
+      orderedIds,
+      plans.length,
+    );
+    await applyPlanSortOrder(orderedIds);
+    return;
+  }
+
+  const pendingIds = new Set(
+    plans
+      .filter((plan) => plan.status === PlanStatus.ACTIVE)
+      .map((plan) => plan.id),
+  );
+
+  await validateOwnedIds(pendingIds, orderedIds, pendingIds.size);
+
+  const pendingQueue = [...orderedIds];
+  const mergedIds = plans.map((plan) => {
+    if (pendingIds.has(plan.id)) {
+      return pendingQueue.shift()!;
+    }
+    return plan.id;
+  });
+
+  await applyPlanSortOrder(mergedIds);
+}
+
+function todoReorderKey(item: TodoReorderItem) {
+  return `${item.kind}:${item.id}`;
+}
+
+type TodoReorderSortRow = TodoReorderItem & {
+  sortOrder: number;
+  createdAt: Date;
+  pending: boolean;
+};
+
+async function listTodoSortRows(userId: string): Promise<TodoReorderSortRow[]> {
   const [oneTimeTodos, recurringTodos] = await Promise.all([
     prisma.todo.findMany({
-      where: { userId, status: { not: "CANCELLED" } },
-      select: { id: true },
+      where: { userId, status: { not: TodoStatus.CANCELLED } },
+      select: { id: true, status: true, sortOrder: true, createdAt: true },
     }),
     prisma.recurringTodo.findMany({
       where: { userId, deletedAt: null },
-      select: { id: true },
+      select: { id: true, active: true, sortOrder: true, createdAt: true },
     }),
   ]);
 
-  const oneTimeIds = new Set(oneTimeTodos.map((todo) => todo.id));
-  const recurringIds = new Set(recurringTodos.map((todo) => todo.id));
+  const rows: TodoReorderSortRow[] = [
+    ...oneTimeTodos.map((todo) => ({
+      kind: "one_time" as const,
+      id: todo.id,
+      sortOrder: todo.sortOrder,
+      createdAt: todo.createdAt,
+      pending: todo.status === TodoStatus.PENDING,
+    })),
+    ...recurringTodos.map((todo) => ({
+      kind: "recurring" as const,
+      id: todo.id,
+      sortOrder: todo.sortOrder,
+      createdAt: todo.createdAt,
+      pending: todo.active,
+    })),
+  ];
 
-  if (orderedItems.length !== oneTimeIds.size + recurringIds.size) {
-    throw new Error("INVALID_ORDER");
-  }
+  return rows.sort(compareBySortOrder);
+}
 
-  const seenOneTime = new Set<string>();
-  const seenRecurring = new Set<string>();
-
-  for (const item of orderedItems) {
-    if (item.kind === "one_time") {
-      if (!oneTimeIds.has(item.id) || seenOneTime.has(item.id)) {
-        throw new Error("NOT_FOUND");
-      }
-      seenOneTime.add(item.id);
-      continue;
-    }
-
-    if (!recurringIds.has(item.id) || seenRecurring.has(item.id)) {
-      throw new Error("NOT_FOUND");
-    }
-    seenRecurring.add(item.id);
-  }
-
+async function applyTodoSortOrder(orderedItems: TodoReorderItem[]) {
   await prisma.$transaction(
     orderedItems.map((item, index) => {
       if (item.kind === "one_time") {
@@ -302,6 +340,75 @@ export async function reorderTodos(userId: string, orderedItems: TodoReorderItem
       });
     }),
   );
+}
+
+export async function reorderTodos(
+  userId: string,
+  orderedItems: TodoReorderItem[],
+  scope: ReorderScope = "all",
+) {
+  const rows = await listTodoSortRows(userId);
+
+  if (scope === "all") {
+    const allItems = rows.map(({ kind, id }) => ({ kind, id }));
+    const oneTimeIds = new Set(
+      rows.filter((row) => row.kind === "one_time").map((row) => row.id),
+    );
+    const recurringIds = new Set(
+      rows.filter((row) => row.kind === "recurring").map((row) => row.id),
+    );
+
+    if (orderedItems.length !== allItems.length) {
+      throw new Error("INVALID_ORDER");
+    }
+
+    const seenOneTime = new Set<string>();
+    const seenRecurring = new Set<string>();
+
+    for (const item of orderedItems) {
+      if (item.kind === "one_time") {
+        if (!oneTimeIds.has(item.id) || seenOneTime.has(item.id)) {
+          throw new Error("NOT_FOUND");
+        }
+        seenOneTime.add(item.id);
+        continue;
+      }
+
+      if (!recurringIds.has(item.id) || seenRecurring.has(item.id)) {
+        throw new Error("NOT_FOUND");
+      }
+      seenRecurring.add(item.id);
+    }
+
+    await applyTodoSortOrder(orderedItems);
+    return;
+  }
+
+  const pendingRows = rows.filter((row) => row.pending);
+  const pendingKeys = new Set(pendingRows.map((row) => todoReorderKey(row)));
+
+  if (orderedItems.length !== pendingRows.length) {
+    throw new Error("INVALID_ORDER");
+  }
+
+  const seen = new Set<string>();
+  for (const item of orderedItems) {
+    const key = todoReorderKey(item);
+    if (!pendingKeys.has(key) || seen.has(key)) {
+      throw new Error("NOT_FOUND");
+    }
+    seen.add(key);
+  }
+
+  const pendingQueue = [...orderedItems];
+  const mergedItems = rows.map((row) => {
+    if (row.pending) {
+      return pendingQueue.shift()!;
+    }
+    return { kind: row.kind, id: row.id };
+  });
+
+  await applyTodoSortOrder(mergedItems);
 }
 
 export function compareBySortOrder<T extends { sortOrder: number; createdAt: Date }>(

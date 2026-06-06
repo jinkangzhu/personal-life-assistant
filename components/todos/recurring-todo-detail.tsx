@@ -12,10 +12,11 @@ import { RecurringTodoEditForm } from "@/components/todos/recurring-todo-edit-fo
 import { RecurringTodoView } from "@/components/todos/recurring-todo-view";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
+import type { RecurringTodoWithPlan, DisplayTodoItem } from "@/lib/services/recurring-todo";
 
 export function RecurringTodoDetail({
   todo,
+  currentPeriod,
 }: {
   todo: RecurringTodoWithPlan & {
     occurrences: Array<{
@@ -26,6 +27,7 @@ export function RecurringTodoDetail({
       completedAt: Date | null;
     }>;
   };
+  currentPeriod: DisplayTodoItem | null;
 }) {
   const router = useRouter();
   const [deletePending, startDeleteTransition] = useTransition();
@@ -59,6 +61,7 @@ export function RecurringTodoDetail({
           <RecurringTodoEditForm
             key={todo.updatedAt.toISOString()}
             todo={todo}
+            currentPeriod={currentPeriod}
             onCancel={exitEdit}
             onSaved={() => {
               exitEdit();
@@ -67,7 +70,7 @@ export function RecurringTodoDetail({
           />
         )}
       >
-        <RecurringTodoView todo={todo} />
+        <RecurringTodoView todo={todo} currentPeriod={currentPeriod} />
       </RecordDetail>
 
       {!todo.deletedAt && (

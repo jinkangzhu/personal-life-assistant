@@ -17,12 +17,13 @@ export default async function TodosPage({
   const todos = await listDisplayTodos(session.id, filter);
 
   return (
-    <PageShell title="待办" description="浏览并管理你的待办">
+    <PageShell
+      title="待办"
+      description="浏览并管理你的待办"
+      action={<TodoCreateButton />}
+    >
       <TodoFilterTabs active={filter} />
       <TodoList todos={todos} filter={filter} />
-      <div className="flex justify-center pt-4">
-        <TodoCreateButton />
-      </div>
     </PageShell>
   );
 }

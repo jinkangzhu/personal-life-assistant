@@ -26,5 +26,14 @@ export const PLAN_STATUS_LABELS: Record<PlanStatus, string> = {
   ARCHIVED: "已归档",
 };
 
+export const planFilterSchema = z.enum(["pending", "completed", "archived", "all"]);
+
+export type PlanFilter = z.infer<typeof planFilterSchema>;
+
+export function parsePlanFilter(value: string | undefined): PlanFilter {
+  const parsed = planFilterSchema.safeParse(value);
+  return parsed.success ? parsed.data : "pending";
+}
+
 export type PlanCreateInput = z.infer<typeof planCreateSchema>;
 export type PlanUpdateInput = z.infer<typeof planUpdateSchema>;

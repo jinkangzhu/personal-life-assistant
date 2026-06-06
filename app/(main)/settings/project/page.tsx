@@ -5,6 +5,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { CategoryManager } from "@/components/settings/category-manager";
 import { TagManager } from "@/components/settings/tag-manager";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
+import { WallpaperPicker } from "@/components/settings/wallpaper-picker";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function ProjectSettingsPage() {
@@ -21,6 +22,7 @@ export default async function ProjectSettingsPage() {
           <CardTitle>外观</CardTitle>
         </CardHeader>
         <ThemeToggle />
+        <WallpaperPicker user={session} />
       </Card>
 
       <Card>

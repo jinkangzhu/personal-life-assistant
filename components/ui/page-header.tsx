@@ -7,12 +7,14 @@ export function PageHeader({
   description,
   backHref,
   backLabel = "返回",
+  action,
   className,
 }: {
   title: string;
   description?: string;
   backHref?: string;
   backLabel?: string;
+  action?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -26,10 +28,15 @@ export function PageHeader({
           {backLabel}
         </Link>
       )}
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {description && (
-        <p className="mt-1 text-sm text-[var(--color-muted)]">{description}</p>
-      )}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          {description && (
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{description}</p>
+          )}
+        </div>
+        {action && <div className="shrink-0 pt-0.5">{action}</div>}
+      </div>
     </div>
   );
 }

@@ -5,12 +5,14 @@ export function PageShell({
   description,
   backHref,
   backLabel,
+  action,
   children,
 }: {
   title: string;
   description?: string;
   backHref?: string;
   backLabel?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -20,6 +22,7 @@ export function PageShell({
         description={description}
         backHref={backHref}
         backLabel={backLabel}
+        action={action}
       />
       {children}
     </div>

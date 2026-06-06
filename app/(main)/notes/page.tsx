@@ -26,14 +26,15 @@ export default async function NotesPage({
   const hasFilters = categories.length > 0 || tags.length > 0;
 
   return (
-    <PageShell title="笔记" description="浏览已写好的笔记">
+    <PageShell
+      title="笔记"
+      description="浏览已写好的笔记"
+      action={<NoteCreateButton />}
+    >
       {hasFilters && (
         <NoteFilters categories={categories} tags={tags} active={filter} />
       )}
       <NoteList notes={notes} />
-      <div className="flex justify-center pt-4">
-        <NoteCreateButton />
-      </div>
     </PageShell>
   );
 }

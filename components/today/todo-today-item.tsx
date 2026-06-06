@@ -58,7 +58,7 @@ export function TodoTodayItem({
             {todo.plan && <span>计划：{todo.plan.title}</span>}
           </div>
 
-          {showCompletionNote && pending && (
+          {pending && (showCompletionNote || todo.kind === "recurring") && (
             <TodoCompletionNote todo={todo} />
           )}
 

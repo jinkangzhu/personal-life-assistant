@@ -326,11 +326,14 @@ export async function unlinkRecurringTodoFromPlan(
   }
 }
 
-export async function reorderPlansAction(orderedIds: string[]) {
+export async function reorderPlansAction(
+  orderedIds: string[],
+  scope: "all" | "pending" = "all",
+) {
   const session = await requireSession();
 
   try {
-    await reorderPlans(session.id, orderedIds);
+    await reorderPlans(session.id, orderedIds, scope);
     revalidatePlanPaths();
     return { ok: true as const };
   } catch (error) {
