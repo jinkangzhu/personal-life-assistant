@@ -9,12 +9,15 @@ import {
   setRecurringTodoActive,
   softDeleteRecurringTodo,
   toggleRecurringOccurrence,
+  updateRecurringOccurrenceDetails,
   updateRecurringOccurrenceNote,
   updateRecurringTodo,
 } from "@/lib/services/recurring-todo";
+import { resolveActivityTypeId } from "@/lib/services/activity-type";
 import {
   getOwnedTodo,
   nextTodoSortOrder,
+  pinTodayTodoToTop,
   reorderTodayTodos,
   reorderTodos,
 } from "@/lib/services/todo";
@@ -47,6 +50,14 @@ function formDataToObject(formData: FormData) {
   return Object.fromEntries(formData.entries()) as Record<string, string>;
 }
 
+async function resolveTodoActivityTypeId(
+  userId: string,
+  activityTypeId: string | undefined,
+) {
+  if (!activityTypeId) return null;
+  return resolveActivityTypeId(userId, activityTypeId);
+}
+
 export async function createTodo(formData: FormData) {
   const session = await requireSession();
 
@@ -62,14 +73,22 @@ export async function createTodo(formData: FormData) {
       monthlyDay: raw.monthlyDay || undefined,
       recurrenceStartDate: raw.recurrenceStartDate || undefined,
       recurrenceEndDate: raw.recurrenceEndDate || undefined,
+      estimatedMinutes: raw.estimatedMinutes || undefined,
+      activityTypeId: raw.activityTypeId || undefined,
     });
 
+    const activityTypeId = await resolveTodoActivityTypeId(
+      session.id,
+      parsed.activityTypeId,
+    );
     const recurrenceType = mapRecurrenceFormToType(parsed.recurrence);
     if (recurrenceType) {
       const recurring = await createRecurringTodo(session.id, {
         title: parsed.title,
         description: parsed.description,
         priority: parsed.priority,
+        estimatedMinutes: parsed.estimatedMinutes,
+        activityTypeId: activityTypeId ?? undefined,
         recurrenceType,
         weeklyDays:
           recurrenceType === RecurrenceType.WEEKLY
@@ -92,6 +111,8 @@ export async function createTodo(formData: FormData) {
         description: parsed.description || null,
         dueDate: parseDateInput(parsed.dueDate),
         priority: parsed.priority,
+        estimatedMinutes: parsed.estimatedMinutes ?? null,
+        activityTypeId,
         sortOrder: await nextTodoSortOrder(session.id),
       },
     });
@@ -119,7 +140,15 @@ export async function updateTodo(id: string, formData: FormData) {
       dueDate: raw.dueDate || undefined,
       priority: raw.priority || Priority.MEDIUM,
       completionNote: raw.completionNote || undefined,
+      estimatedMinutes: raw.estimatedMinutes || undefined,
+      actualMinutes: raw.actualMinutes || undefined,
+      activityTypeId: raw.activityTypeId || undefined,
     });
+
+    const activityTypeId = await resolveTodoActivityTypeId(
+      session.id,
+      parsed.activityTypeId,
+    );
 
     await prisma.todo.update({
       where: { id },
@@ -129,6 +158,9 @@ export async function updateTodo(id: string, formData: FormData) {
         dueDate: parseDateInput(parsed.dueDate),
         priority: parsed.priority,
         completionNote: parsed.completionNote || null,
+        estimatedMinutes: parsed.estimatedMinutes ?? null,
+        actualMinutes: parsed.actualMinutes ?? null,
+        activityTypeId,
       },
     });
 
@@ -161,17 +193,33 @@ export async function updateRecurringTodoAction(id: string, formData: FormData) 
       monthlyDay: raw.monthlyDay ? Number(raw.monthlyDay) : undefined,
       startDate: raw.startDate || undefined,
       endDate: raw.endDate || undefined,
+      estimatedMinutes: raw.estimatedMinutes || undefined,
+      activityTypeId: raw.activityTypeId || undefined,
+      actualMinutes: raw.actualMinutes || undefined,
     });
 
-    await updateRecurringTodo(session.id, id, parsed);
+    const activityTypeId = await resolveTodoActivityTypeId(
+      session.id,
+      parsed.activityTypeId,
+    );
+
+    const { actualMinutes, ...templateInput } = parsed;
+
+    await updateRecurringTodo(session.id, id, {
+      ...templateInput,
+      activityTypeId: activityTypeId ?? undefined,
+    });
 
     if (raw.periodDate) {
       const note = z.string().trim().max(2000).parse(raw.completionNote ?? "");
-      await updateRecurringOccurrenceNote(
+      await updateRecurringOccurrenceDetails(
         session.id,
         id,
         raw.periodDate,
-        note,
+        {
+          completionNote: note,
+          ...(actualMinutes !== undefined ? { actualMinutes } : {}),
+        },
       );
     }
 
@@ -323,6 +371,9 @@ export async function toggleTodoStatus(id: string) {
       data: {
         status: isCompleted ? TodoStatus.PENDING : TodoStatus.COMPLETED,
         completedAt: isCompleted ? null : new Date(),
+        actualMinutes: isCompleted
+          ? todo.actualMinutes
+          : (todo.actualMinutes ?? todo.estimatedMinutes),
       },
     });
 
@@ -383,5 +434,21 @@ export async function reorderTodosAction(
     }
     console.error("reorderTodosAction error:", error);
     return { ok: false as const, error: "排序失败" };
+  }
+}
+
+export async function pinTodayTodoToTopAction(item: TodoReorderItem) {
+  const session = await requireSession();
+
+  try {
+    await pinTodayTodoToTop(session.id, item);
+    revalidateTodoPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Error && error.message === "NOT_FOUND") {
+      return { ok: false as const, error: "待办不存在" };
+    }
+    console.error("pinTodayTodoToTopAction error:", error);
+    return { ok: false as const, error: "置顶失败" };
   }
 }

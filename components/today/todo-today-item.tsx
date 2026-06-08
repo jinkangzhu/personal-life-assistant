@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatDurationPair } from "@/lib/duration";
 import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
 import { isDisplayTodoOverdue } from "@/lib/services/todo";
 import { cn, formatShortDate } from "@/lib/utils";
@@ -56,6 +57,12 @@ export function TodoTodayItem({
               {overdue && " · 已过期"}
             </span>
             {todo.plan && <span>计划：{todo.plan.title}</span>}
+            {todo.activityType && <span>{todo.activityType.name}</span>}
+            {formatDurationPair(todo.actualMinutes, todo.estimatedMinutes) && (
+              <span>
+                {formatDurationPair(todo.actualMinutes, todo.estimatedMinutes)}
+              </span>
+            )}
           </div>
 
           {pending && (showCompletionNote || todo.kind === "recurring") && (

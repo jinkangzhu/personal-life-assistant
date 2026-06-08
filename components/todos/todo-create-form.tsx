@@ -9,13 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PrioritySelect } from "@/components/ui/priority-select";
+import { ActivityTypeSelect } from "@/components/activity-types/activity-type-select";
+import { DurationInput } from "@/components/todos/duration-input";
 import { RecurrenceFields, type RecurrenceFormValue } from "@/components/todos/recurrence-fields";
 import { cn } from "@/lib/utils";
+import type { ActivityType } from "@prisma/client";
 
 const textareaClassName =
   "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
-export function TodoCreateForm() {
+export function TodoCreateForm({
+  activityTypes = [],
+}: {
+  activityTypes?: ActivityType[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -102,6 +109,27 @@ export function TodoCreateForm() {
             </label>
             <PrioritySelect key={`priority-${formKey}`} />
           </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
+              预估时长
+            </label>
+            <DurationInput key={`estimated-${formKey}`} name="estimatedMinutes" />
+          </div>
+
+          {activityTypes.length > 0 && (
+            <div>
+              <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
+                活动类型
+              </label>
+              <ActivityTypeSelect
+                key={`activity-${formKey}`}
+                activityTypes={activityTypes}
+              />
+            </div>
+          )}
         </div>
 
         <FormError message={error} />

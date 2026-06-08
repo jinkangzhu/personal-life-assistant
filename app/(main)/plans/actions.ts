@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createRecurringTodo, getOwnedRecurringTodo } from "@/lib/services/recurring-todo";
+import { resolveActivityTypeId } from "@/lib/services/activity-type";
 import { nextPlanSortOrder, reorderPlans, getOwnedPlan } from "@/lib/services/plan";
 import { getOwnedTodo, nextTodoSortOrder } from "@/lib/services/todo";
 import { requireSession } from "@/lib/session";
@@ -143,7 +144,13 @@ export async function createPlanTodo(planId: string, formData: FormData) {
       monthlyDay: raw.monthlyDay || undefined,
       recurrenceStartDate: raw.recurrenceStartDate || undefined,
       recurrenceEndDate: raw.recurrenceEndDate || undefined,
+      estimatedMinutes: raw.estimatedMinutes || undefined,
+      activityTypeId: raw.activityTypeId || undefined,
     });
+
+    const activityTypeId = raw.activityTypeId
+      ? await resolveActivityTypeId(session.id, parsed.activityTypeId)
+      : null;
 
     const recurrenceType = mapRecurrenceFormToType(parsed.recurrence);
     if (recurrenceType) {
@@ -151,6 +158,8 @@ export async function createPlanTodo(planId: string, formData: FormData) {
         title: parsed.title,
         description: parsed.description,
         priority: parsed.priority,
+        estimatedMinutes: parsed.estimatedMinutes,
+        activityTypeId: activityTypeId ?? undefined,
         recurrenceType,
         weeklyDays:
           recurrenceType === RecurrenceType.WEEKLY
@@ -176,6 +185,8 @@ export async function createPlanTodo(planId: string, formData: FormData) {
         description: parsed.description || null,
         dueDate: parseDateInput(parsed.dueDate),
         priority: parsed.priority,
+        estimatedMinutes: parsed.estimatedMinutes ?? null,
+        activityTypeId,
         sortOrder: await nextTodoSortOrder(session.id),
       },
     });

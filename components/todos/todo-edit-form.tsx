@@ -7,18 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PrioritySelect } from "@/components/ui/priority-select";
+import { ActivityTypeSelect } from "@/components/activity-types/activity-type-select";
+import { DurationInput } from "@/components/todos/duration-input";
 import type { TodoWithPlan } from "@/lib/services/todo";
 import { toDateInputValue } from "@/lib/utils";
+import type { ActivityType } from "@prisma/client";
 
 const textareaClassName =
   "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function TodoEditForm({
   todo,
+  activityTypes = [],
   onCancel,
   onSaved,
 }: {
   todo: TodoWithPlan;
+  activityTypes?: ActivityType[];
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -86,6 +91,37 @@ export function TodoEditForm({
           <PrioritySelect defaultValue={todo.priority} />
         </div>
       </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+            预估时长
+          </label>
+          <DurationInput
+            name="estimatedMinutes"
+            defaultValue={todo.estimatedMinutes}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+            实际时长
+          </label>
+          <DurationInput name="actualMinutes" defaultValue={todo.actualMinutes} />
+        </div>
+      </div>
+
+      {activityTypes.length > 0 && (
+        <div>
+          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+            活动类型
+          </label>
+          <ActivityTypeSelect
+            activityTypes={activityTypes}
+            defaultValue={todo.activityTypeId}
+          />
+        </div>
+      )}
 
       <div>
         <label htmlFor="completionNote" className="mb-1.5 block text-sm text-[var(--color-muted)]">

@@ -6,7 +6,7 @@ import {
   recurringTodoAppliesOnDate,
   type RecurringSchedule,
 } from "@/lib/recurrence";
-import { startOfDay } from "@/lib/utils";
+import { endOfDay, startOfDay } from "@/lib/utils";
 import { nextTodoSortOrder } from "@/lib/services/sort-order";
 import type { RecurringTodoCreateInput } from "@/lib/validators/recurring-todo";
 import {
@@ -19,6 +19,7 @@ import {
 
 const recurringInclude = {
   plan: { select: { id: true, title: true } },
+  activityType: { select: { id: true, name: true } },
 } satisfies Prisma.RecurringTodoInclude;
 
 export type RecurringTodoWithPlan = Prisma.RecurringTodoGetPayload<{
@@ -36,9 +37,13 @@ export type DisplayTodoItem = {
   status: TodoStatus;
   dueDate: Date | null;
   completionNote: string | null;
+  estimatedMinutes: number | null;
+  actualMinutes: number | null;
+  activityType: { id: string; name: string } | null;
   plan: { id: string; title: string } | null;
   sortOrder: number;
   createdAt: Date;
+  completedAt: Date | null;
   recurrenceLabel?: string;
   recurringDeleted?: boolean;
   recurringPaused?: boolean;
@@ -68,6 +73,8 @@ export function toDisplayTodoFromRecurring(
   occurrence?: {
     status: OccurrenceStatus;
     completionNote: string | null;
+    actualMinutes: number | null;
+    completedAt: Date | null;
   } | null,
 ): DisplayTodoItem {
   return {
@@ -83,9 +90,13 @@ export function toDisplayTodoFromRecurring(
       : TodoStatus.PENDING,
     dueDate: startOfDay(periodDate),
     completionNote: occurrence?.completionNote ?? null,
+    estimatedMinutes: todo.estimatedMinutes,
+    actualMinutes: occurrence?.actualMinutes ?? null,
+    activityType: todo.activityType,
     plan: todo.plan,
     sortOrder: todo.sortOrder,
     createdAt: todo.createdAt,
+    completedAt: occurrence?.completedAt ?? null,
     recurrenceLabel: formatRecurrenceLabel({
       recurrenceType: todo.recurrenceType,
       weeklyDays: parseWeeklyDays(todo.weeklyDays),
@@ -97,7 +108,12 @@ export function toDisplayTodoFromRecurring(
 }
 
 export function toDisplayTodoFromOneTime(
-  todo: Prisma.TodoGetPayload<{ include: { plan: { select: { id: true; title: true } } } }>,
+  todo: Prisma.TodoGetPayload<{
+    include: {
+      plan: { select: { id: true; title: true } };
+      activityType: { select: { id: true; name: true } };
+    };
+  }>,
 ): DisplayTodoItem {
   return {
     kind: "one_time",
@@ -108,9 +124,13 @@ export function toDisplayTodoFromOneTime(
     status: todo.status,
     dueDate: todo.dueDate,
     completionNote: todo.completionNote,
+    estimatedMinutes: todo.estimatedMinutes,
+    actualMinutes: todo.actualMinutes,
+    activityType: todo.activityType,
     plan: todo.plan,
     sortOrder: todo.sortOrder,
     createdAt: todo.createdAt,
+    completedAt: todo.completedAt,
   };
 }
 
@@ -169,6 +189,55 @@ export async function getRecurringTodosForDate(userId: string, date: Date) {
   );
 }
 
+export async function getRecurringTodosForDateRange(
+  userId: string,
+  start: Date,
+  end: Date,
+): Promise<DisplayTodoItem[]> {
+  const rangeStart = startOfDay(start);
+  const rangeEnd = startOfDay(end);
+  if (rangeStart > rangeEnd) return [];
+
+  const templates = await prisma.recurringTodo.findMany({
+    where: { userId, deletedAt: null, active: true },
+    include: recurringInclude,
+  });
+
+  if (templates.length === 0) return [];
+
+  const occurrences = await prisma.todoOccurrence.findMany({
+    where: {
+      recurringTodoId: { in: templates.map((todo) => todo.id) },
+      periodDate: { gte: rangeStart, lte: endOfDay(rangeEnd) },
+    },
+  });
+
+  const occurrenceMap = new Map(
+    occurrences.map((item) => [
+      `${item.recurringTodoId}:${toDateKey(item.periodDate)}`,
+      item,
+    ]),
+  );
+
+  const items: DisplayTodoItem[] = [];
+
+  for (const date of eachDateInRange(rangeStart, rangeEnd)) {
+    const dayStart = startOfDay(date);
+    for (const todo of templates) {
+      if (!recurringTodoAppliesOnDate(toSchedule(todo), dayStart)) continue;
+      items.push(
+        toDisplayTodoFromRecurring(
+          todo,
+          dayStart,
+          occurrenceMap.get(`${todo.id}:${toDateKey(dayStart)}`) ?? null,
+        ),
+      );
+    }
+  }
+
+  return items;
+}
+
 export async function getRecurringTodoById(userId: string, id: string) {
   return prisma.recurringTodo.findFirst({
     where: { id, userId },
@@ -199,6 +268,8 @@ export async function createRecurringTodo(
       title: input.title,
       description: input.description || null,
       priority: input.priority,
+      estimatedMinutes: input.estimatedMinutes ?? null,
+      activityTypeId: input.activityTypeId ?? null,
       sortOrder: await nextTodoSortOrder(userId),
       recurrenceType: input.recurrenceType,
       weeklyDays:
@@ -230,6 +301,8 @@ export async function updateRecurringTodo(
       title: input.title,
       description: input.description || null,
       priority: input.priority,
+      estimatedMinutes: input.estimatedMinutes ?? null,
+      activityTypeId: input.activityTypeId ?? null,
       recurrenceType: input.recurrenceType,
       weeklyDays:
         input.recurrenceType === RecurrenceType.WEEKLY && input.weeklyDays
@@ -289,6 +362,9 @@ export async function toggleRecurringOccurrence(
   });
 
   if (!existing || existing.status !== OccurrenceStatus.COMPLETED) {
+    const actualMinutes =
+      existing?.actualMinutes ?? todo.estimatedMinutes ?? null;
+
     return prisma.todoOccurrence.upsert({
       where: {
         recurringTodoId_periodDate: { recurringTodoId, periodDate },
@@ -298,10 +374,12 @@ export async function toggleRecurringOccurrence(
         periodDate,
         status: OccurrenceStatus.COMPLETED,
         completedAt: new Date(),
+        actualMinutes,
       },
       update: {
         status: OccurrenceStatus.COMPLETED,
         completedAt: new Date(),
+        actualMinutes,
       },
     });
   }
@@ -315,11 +393,14 @@ export async function toggleRecurringOccurrence(
   });
 }
 
-export async function updateRecurringOccurrenceNote(
+export async function updateRecurringOccurrenceDetails(
   userId: string,
   recurringTodoId: string,
   periodDateInput: string,
-  completionNote: string,
+  data: {
+    completionNote?: string;
+    actualMinutes?: number | null;
+  },
 ) {
   await getOwnedRecurringTodo(userId, recurringTodoId);
   const periodDate = startOfDay(new Date(`${periodDateInput}T00:00:00`));
@@ -331,12 +412,32 @@ export async function updateRecurringOccurrenceNote(
     create: {
       recurringTodoId,
       periodDate,
-      completionNote: completionNote || null,
+      completionNote: data.completionNote ?? null,
+      actualMinutes: data.actualMinutes ?? null,
     },
     update: {
-      completionNote: completionNote || null,
+      ...(data.completionNote !== undefined
+        ? { completionNote: data.completionNote || null }
+        : {}),
+      ...(data.actualMinutes !== undefined
+        ? { actualMinutes: data.actualMinutes }
+        : {}),
     },
   });
+}
+
+export async function updateRecurringOccurrenceNote(
+  userId: string,
+  recurringTodoId: string,
+  periodDateInput: string,
+  completionNote: string,
+) {
+  return updateRecurringOccurrenceDetails(
+    userId,
+    recurringTodoId,
+    periodDateInput,
+    { completionNote },
+  );
 }
 
 export async function countRecurringProgressForPlan(
@@ -423,9 +524,13 @@ export function recurringTemplatesToDisplayItems(
     status: todo.active ? TodoStatus.PENDING : TodoStatus.CANCELLED,
     dueDate: todo.startDate,
     completionNote: null,
+    estimatedMinutes: todo.estimatedMinutes,
+    actualMinutes: null,
+    activityType: todo.activityType,
     plan: todo.plan,
     sortOrder: todo.sortOrder,
     createdAt: todo.createdAt,
+    completedAt: null,
     recurrenceLabel: formatRecurrenceLabel({
       recurrenceType: todo.recurrenceType,
       weeklyDays: parseWeeklyDays(todo.weeklyDays),
@@ -442,6 +547,8 @@ export function getCurrentPeriodDisplayTodo(
       periodDate: Date;
       status: OccurrenceStatus;
       completionNote: string | null;
+      actualMinutes: number | null;
+      completedAt: Date | null;
     }>;
   },
   refDate: Date = new Date(),

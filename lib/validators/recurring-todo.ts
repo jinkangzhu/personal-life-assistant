@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { Priority, RecurrenceType } from "@prisma/client";
+import {
+  optionalActivityTypeIdSchema,
+  optionalMinutesSchema,
+} from "@/lib/validators/todo";
 
 export const recurrenceTypeSchema = z.nativeEnum(RecurrenceType);
 
@@ -13,6 +17,9 @@ const recurringTodoFieldsSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   planId: z.string().uuid().optional(),
+  estimatedMinutes: optionalMinutesSchema,
+  activityTypeId: optionalActivityTypeIdSchema,
+  actualMinutes: optionalMinutesSchema,
 });
 
 function addRecurrenceRules(

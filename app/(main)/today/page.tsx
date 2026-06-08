@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { getTodayBundle } from "@/lib/services/today";
+import { getSmokingStats } from "@/lib/services/smoking";
+import { formatMinutes } from "@/lib/duration";
 import { buildReviewDraft } from "@/lib/services/review";
 import { formatDate, toDateInputValue } from "@/lib/utils";
 import {
@@ -14,13 +16,17 @@ import {
 import { PageShell } from "@/components/layout/page-shell";
 import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { DiaryQuickCreate } from "@/components/today/diary-quick-create";
+import { SmokingTracker } from "@/components/today/smoking-tracker";
 import { TodoQuickCreate } from "@/components/today/todo-quick-create";
 import { TodoTodayItem } from "@/components/today/todo-today-item";
 import { PenLine } from "lucide-react";
 
 export default async function TodayPage() {
   const session = await requireSession();
-  const bundle = await getTodayBundle(session.id);
+  const [bundle, smokingStats] = await Promise.all([
+    getTodayBundle(session.id),
+    getSmokingStats(session.id),
+  ]);
   const draft = await buildReviewDraft(session.id, bundle.date);
   const dateValue = toDateInputValue(bundle.date);
   const reviewHref = draft.existingReview
@@ -33,6 +39,8 @@ export default async function TodayPage() {
 
   return (
     <PageShell title="今日" description={formatDate(bundle.date)}>
+      <SmokingTracker stats={smokingStats} dateValue={dateValue} />
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="今日完成" value={String(bundle.stats.completedToday)} />
         <StatCard label="待办总数" value={String(bundle.stats.totalToday)} />
@@ -42,6 +50,32 @@ export default async function TodayPage() {
           accent
         />
       </div>
+
+      {(bundle.timeStats.totalMinutes > 0 ||
+        bundle.timeStats.estimatedRemainingMinutes > 0) && (
+        <Card size="sm">
+          <CardContent className="pt-0">
+            <p className="mb-2 text-xs font-medium text-[var(--color-muted)]">
+              今日时长
+            </p>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <p className="text-lg font-semibold text-indigo-400">
+                {formatMinutes(bundle.timeStats.totalMinutes) || "0m"}
+              </p>
+              {bundle.timeStats.byActivity.map((item) => (
+                <span key={item.activityTypeId ?? "uncategorized"} className="text-sm">
+                  {item.name} {formatMinutes(item.minutes)}
+                </span>
+              ))}
+            </div>
+            {bundle.timeStats.estimatedRemainingMinutes > 0 && (
+              <p className="mt-2 text-xs text-[var(--color-muted)]">
+                剩余预估 {formatMinutes(bundle.timeStats.estimatedRemainingMinutes)}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card size="sm">
         <CardContent className="pt-0">

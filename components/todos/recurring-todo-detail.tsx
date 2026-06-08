@@ -12,11 +12,13 @@ import { RecurringTodoEditForm } from "@/components/todos/recurring-todo-edit-fo
 import { RecurringTodoView } from "@/components/todos/recurring-todo-view";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import type { ActivityType } from "@prisma/client";
 import type { RecurringTodoWithPlan, DisplayTodoItem } from "@/lib/services/recurring-todo";
 
 export function RecurringTodoDetail({
   todo,
   currentPeriod,
+  activityTypes = [],
 }: {
   todo: RecurringTodoWithPlan & {
     occurrences: Array<{
@@ -28,6 +30,7 @@ export function RecurringTodoDetail({
     }>;
   };
   currentPeriod: DisplayTodoItem | null;
+  activityTypes?: ActivityType[];
 }) {
   const router = useRouter();
   const [deletePending, startDeleteTransition] = useTransition();
@@ -62,6 +65,7 @@ export function RecurringTodoDetail({
             key={todo.updatedAt.toISOString()}
             todo={todo}
             currentPeriod={currentPeriod}
+            activityTypes={activityTypes}
             onCancel={exitEdit}
             onSaved={() => {
               exitEdit();

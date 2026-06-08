@@ -1,7 +1,12 @@
 import { PageShell } from "@/components/layout/page-shell";
 import { TodoCreateForm } from "@/components/todos/todo-create-form";
+import { listUserActivityTypes } from "@/lib/services/activity-type";
+import { requireSession } from "@/lib/session";
 
-export default function TodoNewPage() {
+export default async function TodoNewPage() {
+  const session = await requireSession();
+  const activityTypes = await listUserActivityTypes(session.id);
+
   return (
     <PageShell
       title="添加待办"
@@ -9,7 +14,7 @@ export default function TodoNewPage() {
       backHref="/todos"
       backLabel="返回列表"
     >
-      <TodoCreateForm />
+      <TodoCreateForm activityTypes={activityTypes} />
     </PageShell>
   );
 }

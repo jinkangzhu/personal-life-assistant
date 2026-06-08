@@ -1,3 +1,4 @@
+import { formatDurationPair, formatMinutes } from "@/lib/duration";
 import { formatRecurrenceLabel, parseWeeklyDays } from "@/lib/recurrence";
 import type { DisplayTodoItem, RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
 import { formatShortDate } from "@/lib/utils";
@@ -44,6 +45,12 @@ export function RecurringTodoView({
         <Field label="重复" value={RECURRENCE_TYPE_LABELS[todo.recurrenceType]} />
         <Field label="规则" value={recurrenceLabel} />
         <Field label="优先级" value={PRIORITY_LABELS[todo.priority]} />
+        {todo.activityType && (
+          <Field label="活动类型" value={todo.activityType.name} />
+        )}
+        {todo.estimatedMinutes && (
+          <Field label="预估时长" value={formatMinutes(todo.estimatedMinutes)} />
+        )}
         <Field
           label="状态"
           value={
@@ -71,11 +78,23 @@ export function RecurringTodoView({
       {currentPeriod && (
         <section>
           <h3 className="mb-1.5 text-xs text-[var(--color-muted)]">
-            完成说明
+            本期记录
             <span className="ml-1.5 font-normal">
               （{formatShortDate(currentPeriod.periodDate)}）
             </span>
           </h3>
+          {formatDurationPair(
+            currentPeriod.actualMinutes,
+            currentPeriod.estimatedMinutes,
+          ) && (
+            <p className="mb-2 text-sm">
+              时长：
+              {formatDurationPair(
+                currentPeriod.actualMinutes,
+                currentPeriod.estimatedMinutes,
+              )}
+            </p>
+          )}
           <TodoCompletionNote todo={currentPeriod} className="mt-0" />
         </section>
       )}

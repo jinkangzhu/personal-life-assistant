@@ -1,3 +1,4 @@
+import { formatDurationPair } from "@/lib/duration";
 import type { TodoWithPlan } from "@/lib/services/todo";
 import { formatShortDate } from "@/lib/utils";
 import { PRIORITY_LABELS } from "@/lib/validators/todo";
@@ -37,6 +38,15 @@ export function TodoView({ todo }: { todo: TodoWithPlan }) {
       <dl className="grid gap-3 sm:grid-cols-2">
         <Field label="截止日期" value={formatShortDate(todo.dueDate)} />
         <Field label="优先级" value={PRIORITY_LABELS[todo.priority]} />
+        {todo.activityType && (
+          <Field label="活动类型" value={todo.activityType.name} />
+        )}
+        {(todo.estimatedMinutes || todo.actualMinutes) && (
+          <Field
+            label="时长"
+            value={formatDurationPair(todo.actualMinutes, todo.estimatedMinutes)}
+          />
+        )}
         {todo.plan && <Field label="关联计划" value={todo.plan.title} className="sm:col-span-2" />}
       </dl>
 

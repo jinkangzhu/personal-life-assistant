@@ -6,6 +6,7 @@ import {
   type TodoReorderItem,
 } from "@/lib/services/sort-order";
 import {
+  sortAllDisplayTodos,
   sortTodayDisplayTodos,
   TODAY_MANUAL_SORT_BASE,
 } from "@/lib/services/todo-sort";
@@ -13,6 +14,8 @@ import {
 import {
 
   getRecurringTodosForDate,
+
+  getRecurringTodosForDateRange,
 
   listActiveRecurringTodos,
 
@@ -24,9 +27,10 @@ import {
 
 } from "@/lib/services/recurring-todo";
 
-import { endOfDay, startOfDay } from "@/lib/utils";
+import { addDays, endOfDay, startOfDay } from "@/lib/utils";
 
-import type { TodoFilter } from "@/lib/validators/todo";
+import type { TodoDateRangeFilter, TodoFilter } from "@/lib/validators/todo";
+import { hasTodoDateRangeFilter } from "@/lib/validators/todo";
 
 import { Prisma, TodoStatus } from "@prisma/client";
 
@@ -35,6 +39,8 @@ import { Prisma, TodoStatus } from "@prisma/client";
 const todoInclude = {
 
   plan: { select: { id: true, title: true } },
+
+  activityType: { select: { id: true, name: true } },
 
 } satisfies Prisma.TodoInclude;
 
@@ -138,6 +144,8 @@ export async function listDisplayTodos(
 
   refDate: Date = new Date(),
 
+  dateRange?: TodoDateRangeFilter,
+
 ): Promise<DisplayTodoItem[]> {
   await backfillTodoSortOrders(userId);
 
@@ -157,42 +165,204 @@ export async function listDisplayTodos(
 
 
 
+  const rangeActive = hasTodoDateRangeFilter(dateRange);
+
+  let items: DisplayTodoItem[];
+
   if (filter === "all" || filter === "pending") {
 
-    const templates = await listActiveRecurringTodos(userId);
+    if (rangeActive && dateRange) {
 
-    const filteredTemplates =
+      items = filterDisplayTodosByDateRange(oneTimeItems, dateRange);
 
-      filter === "pending"
+      const effectiveRange = resolveTodoDateRangeBounds(dateRange);
 
-        ? templates.filter((todo) => todo.active)
+      if (effectiveRange) {
 
-        : templates;
+        const recurringItems = await getRecurringTodosForDateRange(
 
-    return sortDisplayTodos([
+          userId,
 
-      ...oneTimeItems,
+          effectiveRange.start,
 
-      ...recurringTemplatesToDisplayItems(filteredTemplates),
+          effectiveRange.end,
 
-    ]);
+        );
+
+        const filteredRecurring =
+
+          filter === "pending"
+
+            ? recurringItems.filter((todo) => todo.status === TodoStatus.PENDING)
+
+            : recurringItems;
+
+        items = filterDisplayTodosByDateRange(
+
+          [...items, ...filteredRecurring],
+
+          dateRange,
+
+        );
+
+      }
+
+    } else {
+
+      const templates = await listActiveRecurringTodos(userId);
+
+      const filteredTemplates =
+
+        filter === "pending"
+
+          ? templates.filter((todo) => todo.active)
+
+          : templates;
+
+      items = [
+
+        ...oneTimeItems,
+
+        ...recurringTemplatesToDisplayItems(filteredTemplates),
+
+      ];
+
+    }
+
+  } else {
+
+    items = rangeActive && dateRange
+
+      ? filterDisplayTodosByDateRange(oneTimeItems, dateRange)
+
+      : oneTimeItems;
 
   }
 
 
 
-  return sortDisplayTodos(oneTimeItems);
+  return filter === "all"
+    ? sortAllDisplayTodos(items)
+    : sortDisplayTodosByTimeDesc(items);
 
 }
 
 
 
-function sortDisplayTodos(items: DisplayTodoItem[]) {
-  return [...items].sort((a, b) => {
-    const orderDiff = a.sortOrder - b.sortOrder;
-    if (orderDiff !== 0) return orderDiff;
-    return a.createdAt.getTime() - b.createdAt.getTime();
-  });
+const MAX_TODO_DATE_RANGE_DAYS = 366;
+
+
+
+function resolveTodoDateRangeBounds(
+
+  range: TodoDateRangeFilter,
+
+): { start: Date; end: Date } | null {
+
+  if (!range.dateFrom && !range.dateTo) return null;
+
+  const today = startOfDay(new Date());
+
+  let start = range.dateFrom ? startOfDay(range.dateFrom) : startOfDay(range.dateTo!);
+
+  let end = range.dateTo ? startOfDay(range.dateTo) : today;
+
+  if (start > end) {
+
+    [start, end] = [end, start];
+
+  }
+
+  const dayCount =
+
+    Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+  if (dayCount > MAX_TODO_DATE_RANGE_DAYS) {
+
+    end = addDays(start, MAX_TODO_DATE_RANGE_DAYS - 1);
+
+  }
+
+  return { start, end };
+
+}
+
+
+
+function getTodoFilterDate(todo: DisplayTodoItem): Date | null {
+
+  return todo.periodDate ?? todo.dueDate;
+
+}
+
+
+
+function matchesTodoDateRange(
+
+  todo: DisplayTodoItem,
+
+  range: TodoDateRangeFilter,
+
+): boolean {
+
+  const todoDate = getTodoFilterDate(todo);
+
+  if (!todoDate) return false;
+
+  const time = startOfDay(todoDate).getTime();
+
+  if (range.dateFrom && time < startOfDay(range.dateFrom).getTime()) {
+
+    return false;
+
+  }
+
+  if (range.dateTo && time > startOfDay(range.dateTo).getTime()) {
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+
+export function filterDisplayTodosByDateRange(
+
+  items: DisplayTodoItem[],
+
+  range: TodoDateRangeFilter,
+
+): DisplayTodoItem[] {
+
+  if (!hasTodoDateRangeFilter(range)) return items;
+
+  return items.filter((todo) => matchesTodoDateRange(todo, range));
+
+}
+
+
+
+function getTodoSortTime(todo: DisplayTodoItem): number {
+
+  const date = getTodoFilterDate(todo);
+
+  return date ? date.getTime() : todo.createdAt.getTime();
+
+}
+
+
+
+function sortDisplayTodosByTimeDesc(items: DisplayTodoItem[]) {
+
+  return [...items].sort(
+
+    (a, b) => getTodoSortTime(b) - getTodoSortTime(a),
+
+  );
+
 }
 
 
@@ -257,10 +427,6 @@ export function isDisplayTodoOverdue(
 
 }
 
-function todoReorderKey(item: TodoReorderItem) {
-  return `${item.kind}:${item.id}`;
-}
-
 export async function reorderTodayTodos(
   userId: string,
   orderedItems: TodoReorderItem[],
@@ -304,6 +470,45 @@ export async function reorderTodayTodos(
       });
     }),
   );
+}
+
+function todoReorderKey(item: TodoReorderItem) {
+  return `${item.kind}:${item.id}`;
+}
+
+export function displayTodoToReorderItem(todo: DisplayTodoItem): TodoReorderItem {
+  return {
+    kind: todo.kind,
+    id: todo.kind === "recurring" ? (todo.recurringId ?? todo.id) : todo.id,
+  };
+}
+
+export async function pinTodayTodoToTop(
+  userId: string,
+  item: TodoReorderItem,
+  refDate: Date = new Date(),
+) {
+  const todayItems = await listDisplayTodos(userId, "today", refDate);
+  const currentOrder = todayItems.map(displayTodoToReorderItem);
+  const targetKey = todoReorderKey(item);
+  const index = currentOrder.findIndex(
+    (entry) => todoReorderKey(entry) === targetKey,
+  );
+
+  if (index < 0) {
+    throw new Error("NOT_FOUND");
+  }
+  if (index === 0) {
+    return;
+  }
+
+  const reordered = [
+    currentOrder[index],
+    ...currentOrder.slice(0, index),
+    ...currentOrder.slice(index + 1),
+  ];
+
+  await reorderTodayTodos(userId, reordered, refDate);
 }
 
 export { nextTodoSortOrder, reorderTodos, type TodoReorderItem };

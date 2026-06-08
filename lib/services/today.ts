@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
+import { getDayTimeStats } from "@/lib/services/time-stats";
 import { isTodoOverdue, listDisplayTodos } from "@/lib/services/todo";
 import { endOfDay, startOfDay } from "@/lib/utils";
 import { TodoStatus } from "@prisma/client";
@@ -28,7 +29,7 @@ export function splitTodayDisplayTodos(
 export async function getTodayBundle(userId: string, date: Date = new Date()) {
   const dayStart = startOfDay(date);
 
-  const [diaryEntries, todos, overdueCount] = await Promise.all([
+  const [diaryEntries, todos, overdueCount, timeStats] = await Promise.all([
     prisma.diaryEntry.findMany({
       where: {
         userId,
@@ -44,6 +45,7 @@ export async function getTodayBundle(userId: string, date: Date = new Date()) {
         dueDate: { lt: dayStart },
       },
     }),
+    getDayTimeStats(userId, date),
   ]);
 
   const pendingTodos = todos.filter((t) => t.status === TodoStatus.PENDING);
@@ -71,5 +73,6 @@ export async function getTodayBundle(userId: string, date: Date = new Date()) {
       completionRate:
         totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0,
     },
+    timeStats,
   };
 }

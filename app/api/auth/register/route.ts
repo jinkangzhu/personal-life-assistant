@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, setAuthCookie, signToken } from "@/lib/auth";
 import { registerSchema } from "@/lib/validators/auth";
+import { DEFAULT_ACTIVITY_TYPES } from "@/lib/validators/activity-type";
 import { z } from "zod";
 
 const DEFAULT_CATEGORIES = [
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
         passwordHash,
         displayName: displayName || null,
         categories: { create: DEFAULT_CATEGORIES },
+        activityTypes: { create: [...DEFAULT_ACTIVITY_TYPES] },
       },
     });
 

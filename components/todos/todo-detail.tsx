@@ -7,9 +7,16 @@ import { RecordDetail } from "@/components/detail/record-detail";
 import { TodoEditForm } from "@/components/todos/todo-edit-form";
 import { TodoView } from "@/components/todos/todo-view";
 import { Card } from "@/components/ui/card";
+import type { ActivityType } from "@prisma/client";
 import type { TodoWithPlan } from "@/lib/services/todo";
 
-export function TodoDetail({ todo }: { todo: TodoWithPlan }) {
+export function TodoDetail({
+  todo,
+  activityTypes = [],
+}: {
+  todo: TodoWithPlan;
+  activityTypes?: ActivityType[];
+}) {
   const router = useRouter();
   const [deletePending, startDeleteTransition] = useTransition();
 
@@ -30,6 +37,7 @@ export function TodoDetail({ todo }: { todo: TodoWithPlan }) {
           <TodoEditForm
             key={todo.updatedAt.toISOString()}
             todo={todo}
+            activityTypes={activityTypes}
             onCancel={exitEdit}
             onSaved={() => {
               exitEdit();

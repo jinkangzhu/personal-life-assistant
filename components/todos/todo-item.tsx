@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatDurationPair } from "@/lib/duration";
 import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
 import { isDisplayTodoOverdue } from "@/lib/services/todo";
 import { cn, formatShortDate } from "@/lib/utils";
@@ -76,6 +77,12 @@ export function TodoItem({
             {overdue && " · 已过期"}
           </span>
           {todo.plan && <span>计划：{todo.plan.title}</span>}
+          {todo.activityType && <span>{todo.activityType.name}</span>}
+          {formatDurationPair(todo.actualMinutes, todo.estimatedMinutes) && (
+            <span>
+              {formatDurationPair(todo.actualMinutes, todo.estimatedMinutes)}
+            </span>
+          )}
           {todo.completionNote && (
             <span className="line-clamp-1">说明：{todo.completionNote}</span>
           )}

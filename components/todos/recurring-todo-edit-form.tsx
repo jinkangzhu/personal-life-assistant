@@ -12,7 +12,10 @@ import { formatRecurrenceLabel, parseWeeklyDays } from "@/lib/recurrence";
 import type { DisplayTodoItem, RecurringTodoWithPlan } from "@/lib/services/recurring-todo";
 import { toDateInputValue } from "@/lib/utils";
 import { RecurrenceType } from "@prisma/client";
+import type { ActivityType } from "@prisma/client";
 import { WeekdayPicker } from "@/components/todos/weekday-picker";
+import { ActivityTypeSelect } from "@/components/activity-types/activity-type-select";
+import { DurationInput } from "@/components/todos/duration-input";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormError } from "@/components/ui/form-error";
@@ -26,11 +29,13 @@ const textareaClassName =
 export function RecurringTodoEditForm({
   todo,
   currentPeriod,
+  activityTypes = [],
   onCancel,
   onSaved,
 }: {
   todo: RecurringTodoWithPlan;
   currentPeriod?: DisplayTodoItem | null;
+  activityTypes?: ActivityType[];
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -117,6 +122,30 @@ export function RecurringTodoEditForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+            预估时长
+          </label>
+          <DurationInput
+            name="estimatedMinutes"
+            defaultValue={todo.estimatedMinutes}
+          />
+        </div>
+
+        {activityTypes.length > 0 && (
+          <div>
+            <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+              活动类型
+            </label>
+            <ActivityTypeSelect
+              activityTypes={activityTypes}
+              defaultValue={todo.activityTypeId}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
             开始日期
           </label>
           <DatePicker
@@ -167,6 +196,19 @@ export function RecurringTodoEditForm({
               defaultValue={currentPeriod.completionNote ?? ""}
               placeholder="记录完成情况，或未完成的原因…"
               className={textareaClassName}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
+              实际时长
+              <span className="ml-1.5 text-xs">
+                （{toDateInputValue(currentPeriod.periodDate)}）
+              </span>
+            </label>
+            <DurationInput
+              name="actualMinutes"
+              defaultValue={currentPeriod.actualMinutes}
             />
           </div>
         </>

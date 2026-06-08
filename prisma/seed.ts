@@ -1,5 +1,6 @@
 import { hashPassword } from "../lib/auth";
 import { prisma } from "../lib/db";
+import { DEFAULT_ACTIVITY_TYPES } from "../lib/validators/activity-type";
 
 async function main() {
   const email = process.env.SEED_EMAIL ?? "me@example.com";
@@ -24,6 +25,9 @@ async function main() {
           { name: "AI", sortOrder: 1 },
           { name: "生活", sortOrder: 2 },
         ],
+      },
+      activityTypes: {
+        create: [...DEFAULT_ACTIVITY_TYPES],
       },
     },
   });

@@ -26,9 +26,11 @@ model User {
   reviews      Review[]
   notes        Note[]
   goals        LongTermGoal[]
-  tags         Tag[]
-  categories   Category[]
-  tagRelations TagRelation[]
+  tags          Tag[]
+  categories    Category[]
+  activityTypes ActivityType[]
+  tagRelations  TagRelation[]
+  smokingDailyLogs SmokingDailyLog[]
 
   @@map("users")
 }
@@ -58,18 +60,23 @@ model Todo {
   dueDate         DateTime?  @map("due_date")
   priority        Priority   @default(MEDIUM)
   status          TodoStatus @default(PENDING)
-  completionNote  String?    @map("completion_note")
-  completedAt     DateTime?  @map("completed_at")
-  sortOrder       Int        @default(0) @map("sort_order")
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
+  completionNote   String?    @map("completion_note")
+  completedAt      DateTime?  @map("completed_at")
+  estimatedMinutes Int?       @map("estimated_minutes")
+  actualMinutes    Int?       @map("actual_minutes")
+  activityTypeId   String?    @map("activity_type_id")
+  sortOrder        Int        @default(0) @map("sort_order")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan Plan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  activityType ActivityType? @relation(fields: [activityTypeId], references: [id], onDelete: SetNull)
 
   @@index([userId, status])
   @@index([userId, dueDate])
   @@index([userId, sortOrder])
+  @@index([userId, completedAt])
   @@map("todos")
 }
 
@@ -85,15 +92,18 @@ model RecurringTodo {
   monthlyDay     Int?           @map("monthly_day")
   startDate      DateTime?      @map("start_date")
   endDate        DateTime?      @map("end_date")
-  active         Boolean        @default(true)
-  deletedAt      DateTime?      @map("deleted_at")
-  sortOrder      Int            @default(0) @map("sort_order")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  active           Boolean        @default(true)
+  deletedAt        DateTime?      @map("deleted_at")
+  estimatedMinutes Int?           @map("estimated_minutes")
+  activityTypeId   String?        @map("activity_type_id")
+  sortOrder        Int            @default(0) @map("sort_order")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        Plan?            @relation(fields: [planId], references: [id], onDelete: SetNull)
-  occurrences TodoOccurrence[]
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         Plan?            @relation(fields: [planId], references: [id], onDelete: SetNull)
+  activityType ActivityType?    @relation(fields: [activityTypeId], references: [id], onDelete: SetNull)
+  occurrences  TodoOccurrence[]
 
   @@index([userId, active])
   @@index([userId, planId])
@@ -108,6 +118,7 @@ model TodoOccurrence {
   status          OccurrenceStatus @default(PENDING)
   completionNote  String?          @map("completion_note")
   completedAt     DateTime?        @map("completed_at")
+  actualMinutes   Int?             @map("actual_minutes")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
@@ -244,6 +255,36 @@ model Category {
 
   @@unique([userId, name])
   @@map("categories")
+}
+
+model ActivityType {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  todos          Todo[]
+  recurringTodos RecurringTodo[]
+
+  @@unique([userId, name])
+  @@map("activity_types")
+}
+
+model SmokingDailyLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  date      DateTime
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("smoking_daily_logs")
 }
 
 enum Mood {

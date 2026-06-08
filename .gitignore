@@ -20,7 +20,14 @@
 
 # misc
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.pem
+
+# ide
+.cursor/
+.vercel/
+.turbo/
 
 # debug
 npm-debug.log*

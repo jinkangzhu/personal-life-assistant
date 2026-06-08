@@ -7,6 +7,12 @@ import {
   reorderCategories,
   updateCategory,
 } from "@/lib/services/category";
+import {
+  createActivityType,
+  deleteActivityType,
+  reorderActivityTypes,
+  updateActivityType,
+} from "@/lib/services/activity-type";
 import { createTag, deleteTag, updateTag } from "@/lib/services/tag";
 import {
   removeUserWallpaper,
@@ -25,6 +31,10 @@ import {
   categoryUpdateSchema,
 } from "@/lib/validators/category";
 import {
+  activityTypeCreateSchema,
+  activityTypeUpdateSchema,
+} from "@/lib/validators/activity-type";
+import {
   changePasswordSchema,
   clampWallpaperOverlay,
   parseWallpaperPreference,
@@ -41,6 +51,8 @@ function revalidateSettingsPaths() {
   revalidatePath("/diary");
   revalidatePath("/diary/new");
   revalidatePath("/notes");
+  revalidatePath("/todos");
+  revalidatePath("/today");
   revalidatePath("/", "layout");
 }
 
@@ -360,6 +372,94 @@ export async function reorderCategoriesAction(orderedIds: string[]) {
       return { ok: false as const, error: "排序无效" };
     }
     console.error("reorderCategoriesAction error:", error);
+    return { ok: false as const, error: "排序失败" };
+  }
+}
+
+export async function createActivityTypeAction(formData: FormData) {
+  const session = await requireSession();
+
+  try {
+    const raw = formDataToObject(formData);
+    const parsed = activityTypeCreateSchema.parse({ name: raw.name });
+
+    await createActivityType(session.id, parsed.name);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { ok: false as const, error: error.errors[0]?.message ?? "参数无效" };
+    }
+    if (
+      error instanceof Error &&
+      error.message.includes("Unique constraint")
+    ) {
+      return { ok: false as const, error: "活动类型已存在" };
+    }
+    console.error("createActivityTypeAction error:", error);
+    return { ok: false as const, error: "创建失败" };
+  }
+}
+
+export async function updateActivityTypeAction(id: string, formData: FormData) {
+  const session = await requireSession();
+
+  try {
+    const raw = formDataToObject(formData);
+    const parsed = activityTypeUpdateSchema.parse({ name: raw.name });
+
+    await updateActivityType(session.id, id, parsed);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { ok: false as const, error: error.errors[0]?.message ?? "参数无效" };
+    }
+    if (error instanceof Error && error.message === "ACTIVITY_TYPE_NOT_FOUND") {
+      return { ok: false as const, error: "活动类型不存在" };
+    }
+    if (
+      error instanceof Error &&
+      error.message.includes("Unique constraint")
+    ) {
+      return { ok: false as const, error: "类型名已被使用" };
+    }
+    console.error("updateActivityTypeAction error:", error);
+    return { ok: false as const, error: "更新失败" };
+  }
+}
+
+export async function deleteActivityTypeAction(id: string) {
+  const session = await requireSession();
+
+  try {
+    await deleteActivityType(session.id, id);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Error && error.message === "ACTIVITY_TYPE_NOT_FOUND") {
+      return { ok: false as const, error: "活动类型不存在" };
+    }
+    console.error("deleteActivityTypeAction error:", error);
+    return { ok: false as const, error: "删除失败" };
+  }
+}
+
+export async function reorderActivityTypesAction(orderedIds: string[]) {
+  const session = await requireSession();
+
+  try {
+    await reorderActivityTypes(session.id, orderedIds);
+    revalidateSettingsPaths();
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Error && error.message === "ACTIVITY_TYPE_NOT_FOUND") {
+      return { ok: false as const, error: "活动类型不存在" };
+    }
+    if (error instanceof Error && error.message === "INVALID_ORDER") {
+      return { ok: false as const, error: "排序无效" };
+    }
+    console.error("reorderActivityTypesAction error:", error);
     return { ok: false as const, error: "排序失败" };
   }
 }
