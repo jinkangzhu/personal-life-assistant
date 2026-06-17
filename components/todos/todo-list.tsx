@@ -33,8 +33,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 
 import { reorderTodosAction } from "@/app/(main)/todos/actions";
-
-import { EmptyState } from "@/components/ui/card";
+import { TodoCreateButton } from "@/components/todos/todo-create-button";
+import { ModuleEmptyState } from "@/components/ui/module-ui";
 
 import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
 
@@ -368,14 +368,11 @@ export function TodoList({
 
         )}
 
-        <EmptyState
-
-          variant="dashed"
-
+        <ModuleEmptyState
+          module="todo"
           title="暂无待办"
-
-          description="点击下方按钮添加待办，或切换筛选条件"
-
+          description="写清楚下一步动作。也可以切换筛选条件查看其他待办。"
+          action={<TodoCreateButton />}
         />
 
       </>

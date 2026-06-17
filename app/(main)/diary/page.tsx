@@ -12,7 +12,7 @@ export default async function DiaryPage() {
   return (
     <PageShell
       title="日记"
-      description="按日期浏览已写好的日记"
+      description="按日期回看记录——发生的事、学到的东西、当时的心情"
       action={<DiaryWriteButton />}
     >
       <DiaryList groups={groups} />

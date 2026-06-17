@@ -3,18 +3,20 @@ import { FormError } from "@/components/ui/form-error";
 
 import { useState, useTransition } from "react";
 import { updateTodo } from "@/app/(main)/todos/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { PrioritySelect } from "@/components/ui/priority-select";
 import { ActivityTypeSelect } from "@/components/activity-types/activity-type-select";
 import { DurationInput } from "@/components/todos/duration-input";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleTitleInput,
+  moduleTextareaClassName,
+} from "@/components/ui/module-ui";
+import { PrioritySelect } from "@/components/ui/priority-select";
 import type { TodoWithPlan } from "@/lib/services/todo";
 import { toDateInputValue } from "@/lib/utils";
 import type { ActivityType } from "@prisma/client";
-
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function TodoEditForm({
   todo,
@@ -46,12 +48,12 @@ export function TodoEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="title" className="mb-1.5 block text-sm text-[var(--color-muted)]">
+        <label htmlFor="title" className="sr-only">
           标题
         </label>
-        <Input
+        <ModuleTitleInput
           id="title"
           name="title"
           defaultValue={todo.title}
@@ -61,23 +63,19 @@ export function TodoEditForm({
       </div>
 
       <div>
-        <label htmlFor="description" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          描述
-        </label>
+        <ModuleFormLabel htmlFor="description">补充说明</ModuleFormLabel>
         <textarea
           id="description"
           name="description"
           rows={4}
           defaultValue={todo.description ?? ""}
-          className={textareaClassName}
+          className={moduleTextareaClassName}
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            截止日期
-          </label>
+          <ModuleFormLabel>截止日期</ModuleFormLabel>
           <DatePicker
             name="dueDate"
             defaultValue={toDateInputValue(todo.dueDate)}
@@ -85,18 +83,14 @@ export function TodoEditForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            优先级
-          </label>
+          <ModuleFormLabel>优先级</ModuleFormLabel>
           <PrioritySelect defaultValue={todo.priority} />
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            预估时长
-          </label>
+          <ModuleFormLabel>预估时长</ModuleFormLabel>
           <DurationInput
             name="estimatedMinutes"
             defaultValue={todo.estimatedMinutes}
@@ -104,18 +98,14 @@ export function TodoEditForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            实际时长
-          </label>
+          <ModuleFormLabel>实际时长</ModuleFormLabel>
           <DurationInput name="actualMinutes" defaultValue={todo.actualMinutes} />
         </div>
       </div>
 
       {activityTypes.length > 0 && (
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            活动类型
-          </label>
+          <ModuleFormLabel>活动类型</ModuleFormLabel>
           <ActivityTypeSelect
             activityTypes={activityTypes}
             defaultValue={todo.activityTypeId}
@@ -124,29 +114,27 @@ export function TodoEditForm({
       )}
 
       <div>
-        <label htmlFor="completionNote" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          完成说明
-        </label>
+        <ModuleFormLabel htmlFor="completionNote">完成说明</ModuleFormLabel>
         <textarea
           id="completionNote"
           name="completionNote"
           rows={3}
           defaultValue={todo.completionNote ?? ""}
           placeholder="记录完成情况，或未完成的原因…"
-          className={textareaClassName}
+          className={moduleTextareaClassName}
         />
       </div>
 
       <FormError message={error} />
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <ModuleFormActions className="border-t-0 pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "保存中…" : "保存"}
         </Button>
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
           取消
         </Button>
-      </div>
+      </ModuleFormActions>
     </form>
   );
 }

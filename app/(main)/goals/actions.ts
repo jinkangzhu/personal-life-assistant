@@ -26,6 +26,8 @@ function revalidateGoalPaths(id?: string) {
 
   revalidatePath("/goals");
 
+  revalidatePath("/goals/new");
+
   revalidatePath("/search");
 
   revalidatePath("/plans");

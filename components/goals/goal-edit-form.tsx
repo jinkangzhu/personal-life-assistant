@@ -4,13 +4,14 @@ import { FormError } from "@/components/ui/form-error";
 
 import { useState, useTransition } from "react";
 import { updateGoal } from "@/app/(main)/goals/actions";
+import {
+  GoalFormLabel,
+  GoalTitleInput,
+  goalTextareaClassName,
+} from "@/components/goals/goal-form-styles";
 import { GoalStatusSelect } from "@/components/goals/goal-status-select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { GoalWithPlans } from "@/lib/services/goal";
-
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function GoalEditForm({
   goal,
@@ -35,17 +36,17 @@ export function GoalEditForm({
         onSaved();
         return;
       }
-      setError(result.error ?? "????");
+      setError(result.error ?? "保存失败");
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="goal-title" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          ??
+        <label htmlFor="goal-title" className="sr-only">
+          标题
         </label>
-        <Input
+        <GoalTitleInput
           id="goal-title"
           name="title"
           defaultValue={goal.title}
@@ -55,22 +56,19 @@ export function GoalEditForm({
       </div>
 
       <div>
-        <label htmlFor="goal-description" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          ??????
-        </label>
+        <GoalFormLabel htmlFor="goal-description">背景与期望</GoalFormLabel>
         <textarea
           id="goal-description"
           name="description"
-          rows={4}
+          rows={5}
           defaultValue={goal.description ?? ""}
-          className={textareaClassName}
+          placeholder="为什么重要？希望看到什么变化？"
+          className={goalTextareaClassName}
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          ??
-        </label>
+        <GoalFormLabel>当前状态</GoalFormLabel>
         <GoalStatusSelect
           key={goal.updatedAt.toISOString()}
           defaultValue={goal.status}
@@ -79,12 +77,12 @@ export function GoalEditForm({
 
       <FormError message={error} />
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 border-t border-[var(--color-border)]/70 pt-4">
         <Button type="submit" disabled={pending}>
-          {pending ? "????" : "??"}
+          {pending ? "保存中…" : "保存"}
         </Button>
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
-          ??
+          取消
         </Button>
       </div>
     </form>

@@ -7,7 +7,8 @@ import { RecordDetail } from "@/components/detail/record-detail";
 import { PlanEditForm } from "@/components/plans/plan-edit-form";
 import { PlanTodosSection } from "@/components/plans/plan-todos-section";
 import { PlanView } from "@/components/plans/plan-view";
-import { Card } from "@/components/ui/card";
+import { planStatusAccentBar } from "@/components/plans/plan-status-select";
+import { ModulePanel } from "@/components/ui/module-ui";
 import type { PlanWithTodos } from "@/lib/services/plan";
 import type { RecurringTodo, Todo } from "@prisma/client";
 
@@ -32,7 +33,7 @@ export function PlanDetail({
 
   return (
     <div className="space-y-6">
-      <Card className="px-4 py-4">
+      <ModulePanel module="plan" accentClassName={planStatusAccentBar[plan.status]}>
         <RecordDetail
           onDelete={handleDelete}
           deletePending={deletePending}
@@ -53,7 +54,7 @@ export function PlanDetail({
         >
           <PlanView plan={plan} />
         </RecordDetail>
-      </Card>
+      </ModulePanel>
 
       {!editing && (
         <PlanTodosSection

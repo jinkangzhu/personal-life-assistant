@@ -6,6 +6,7 @@ import {
   removeAvatarAction,
   uploadAvatarAction,
 } from "@/app/(main)/settings/actions";
+import { SettingsFieldHint } from "@/components/settings/settings-ui";
 import { UserAvatar } from "@/components/user/user-avatar";
 import { Button } from "@/components/ui/button";
 import { FormError, FormSuccess } from "@/components/ui/form-error";
@@ -27,6 +28,8 @@ export function AvatarUpload({
   const [removePending, startRemoveTransition] = useTransition();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const displayName = user.displayName ?? user.email.split("@")[0];
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -67,15 +70,22 @@ export function AvatarUpload({
   const pending = uploadPending || removePending;
 
   return (
-    <div className="space-y-4 px-4 pb-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <UserAvatar user={user} size="lg" />
 
-        <div className="space-y-2">
-          <p className="text-sm text-[var(--color-foreground)]">头像</p>
-          <p className="text-xs text-[var(--color-muted)]">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div>
+            <p className="text-lg font-medium leading-snug tracking-tight">
+              {displayName}
+            </p>
+            <p className="mt-0.5 text-sm text-[var(--color-muted)]">{user.email}</p>
+          </div>
+
+          <SettingsFieldHint>
             支持 JPG、PNG、WebP、GIF，最大 2MB
-          </p>
+          </SettingsFieldHint>
+
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"

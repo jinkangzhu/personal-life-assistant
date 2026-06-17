@@ -1,10 +1,11 @@
 "use client";
-import { FormError, FormSuccess } from '@/components/ui/form-error';
+import { FormError, FormSuccess } from "@/components/ui/form-error";
 
 import { useState, useTransition } from "react";
 import { changePasswordAction } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ModuleFormActions, ModuleFormLabel } from "@/components/ui/module-ui";
 
 export function PasswordForm() {
   const [pending, startTransition] = useTransition();
@@ -30,11 +31,9 @@ export function PasswordForm() {
   }
 
   return (
-    <form key={formKey} onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
+    <form key={formKey} onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="currentPassword" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          当前密码
-        </label>
+        <ModuleFormLabel htmlFor="currentPassword">当前密码</ModuleFormLabel>
         <Input
           id="currentPassword"
           name="currentPassword"
@@ -45,9 +44,7 @@ export function PasswordForm() {
       </div>
 
       <div>
-        <label htmlFor="newPassword" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          新密码
-        </label>
+        <ModuleFormLabel htmlFor="newPassword">新密码</ModuleFormLabel>
         <Input
           id="newPassword"
           name="newPassword"
@@ -60,9 +57,7 @@ export function PasswordForm() {
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          确认新密码
-        </label>
+        <ModuleFormLabel htmlFor="confirmPassword">确认新密码</ModuleFormLabel>
         <Input
           id="confirmPassword"
           name="confirmPassword"
@@ -76,9 +71,11 @@ export function PasswordForm() {
       <FormError message={error} />
       <FormSuccess message={success} />
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "保存中…" : "修改密码"}
-      </Button>
+      <ModuleFormActions className="border-t-0 pt-0">
+        <Button type="submit" disabled={pending}>
+          {pending ? "保存中…" : "修改密码"}
+        </Button>
+      </ModuleFormActions>
     </form>
   );
 }

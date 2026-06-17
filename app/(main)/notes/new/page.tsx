@@ -14,7 +14,7 @@ export default async function NoteNewPage() {
   return (
     <PageShell
       title="写笔记"
-      description="记录技术笔记、学习心得与易错点"
+      description="好标题和分类，让这条笔记以后还能被找到"
       backHref="/notes"
       backLabel="返回列表"
     >

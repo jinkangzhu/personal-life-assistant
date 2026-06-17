@@ -29,8 +29,9 @@ import {
 } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { SettingsManagerItem } from "@/components/settings/settings-ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ModuleInlineEmpty } from "@/components/ui/module-ui";
 import { cn } from "@/lib/utils";
 import type { Category } from "@prisma/client";
 
@@ -73,15 +74,13 @@ function SortableCategoryItem({
       style={style}
       className={cn(isDragging && "z-10 opacity-90")}
     >
-      <Card
-        className={cn(
-          "flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center",
-          isDragging && "border-indigo-500/40 shadow-lg ring-2 ring-indigo-500/20",
-        )}
+      <SettingsManagerItem
+        accentClassName="bg-violet-400/55"
+        isDragging={isDragging}
       >
         {editingId === category.id ? (
           <form
-            className="flex flex-1 gap-2"
+            className="flex flex-1 gap-2 pl-1"
             onSubmit={(event) => {
               event.preventDefault();
               onUpdate(category.id, event.currentTarget);
@@ -110,7 +109,7 @@ function SortableCategoryItem({
           <>
             <button
               type="button"
-              className="flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md p-1 text-[var(--color-muted)] transition hover:bg-[var(--color-card-hover)] hover:text-indigo-400 active:cursor-grabbing"
+              className="flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md p-1 text-[var(--color-muted)] opacity-0 transition hover:bg-[var(--color-card-hover)] hover:text-indigo-400 active:cursor-grabbing group-hover/item:opacity-100 focus-visible:opacity-100"
               aria-label={`拖拽排序 ${category.name}`}
               {...attributes}
               {...listeners}
@@ -118,10 +117,10 @@ function SortableCategoryItem({
               <GripVertical className="h-4 w-4" />
             </button>
 
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <span className="text-sm font-medium">{category.name}</span>
-              <span className="text-xs text-[var(--color-muted)]">
-                排序 {index + 1}
+            <div className="flex min-w-0 flex-1 items-center gap-3 pl-1">
+              <span className="text-sm font-medium leading-snug">{category.name}</span>
+              <span className="font-mono text-xs tabular-nums text-[var(--color-muted)]">
+                #{index + 1}
               </span>
             </div>
 
@@ -147,7 +146,7 @@ function SortableCategoryItem({
             </div>
           </>
         )}
-      </Card>
+      </SettingsManagerItem>
     </li>
   );
 }
@@ -265,9 +264,10 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       <FormError message={createError} />
 
       {items.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted)]">
-          暂无分类，创建笔记时可选择分类。
-        </p>
+        <ModuleInlineEmpty
+          title="暂无分类"
+          description="创建笔记时可选择分类，也可以在这里预先添加"
+        />
       ) : (
         <DndContext
           sensors={sensors}
@@ -278,7 +278,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             items={items.map((item) => item.id)}
             strategy={verticalListSortingStrategy}
           >
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {items.map((category, index) => (
                 <SortableCategoryItem
                   key={category.id}
@@ -303,7 +303,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       {reorderError && <p className="text-sm text-red-400">{reorderError}</p>}
       <FormError message={editError} />
       <p className="text-xs text-[var(--color-muted)]">
-        拖拽左侧手柄调整分类顺序，分类主要用于笔记模块。
+        悬停后拖拽手柄可调整顺序。
       </p>
       <ConfirmDialog
         open={deleteTarget !== null}

@@ -10,7 +10,7 @@ export default async function DiaryNewPage() {
   return (
     <PageShell
       title="写日记"
-      description="记录今天的学习、生活与心情"
+      description="今天想记住什么，就写什么"
       backHref="/diary"
       backLabel="返回列表"
     >

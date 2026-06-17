@@ -8,6 +8,7 @@ import {
   uploadWallpaperAction,
 } from "@/app/(main)/settings/actions";
 import { FormError } from "@/components/ui/form-error";
+import { SettingsFieldHint } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { buildWallpaperUrl } from "@/lib/wallpaper-image";
 import {
@@ -43,6 +44,7 @@ const PREVIEW_CLASS: Record<
 
 export function WallpaperPicker({
   user,
+  embedded = false,
 }: {
   user: {
     id: string;
@@ -51,6 +53,7 @@ export function WallpaperPicker({
     wallpaperKey: string | null;
     updatedAt: Date;
   };
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -174,9 +177,16 @@ export function WallpaperPicker({
   const pending = savePending || uploadPending || removePending;
 
   return (
-    <div className="space-y-4 border-t border-[var(--color-border)] px-4 pb-4 pt-4">
+    <div
+      className={cn(
+        "space-y-5",
+        !embedded && "border-t border-[var(--color-border)] px-4 pb-4 pt-4",
+      )}
+    >
       <div>
-        <p className="mb-2 text-sm font-medium">壁纸</p>
+        <p className="mb-3 text-xs font-medium tracking-wide text-[var(--color-muted)]">
+          壁纸预设
+        </p>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {WALLPAPER_BUILTIN_PRESETS.map((preset) => {
             const active = wallpaper === preset.id;
@@ -249,14 +259,12 @@ export function WallpaperPicker({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">自定义上传</p>
-        <p className="text-xs text-[var(--color-muted)]">
-          支持 JPG、PNG、WebP，最大 5MB。图片保存在服务器{" "}
-          <code className="rounded bg-[var(--color-card-hover)] px-1 py-0.5">
-            data/uploads/wallpapers/
-          </code>
-          ，数据库仅记录文件名与偏好。
+        <p className="text-xs font-medium tracking-wide text-[var(--color-muted)]">
+          自定义上传
         </p>
+        <SettingsFieldHint>
+          支持 JPG、PNG、WebP，最大 5MB。上传后保存在服务器，换设备登录可自动恢复。
+        </SettingsFieldHint>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -289,10 +297,10 @@ export function WallpaperPicker({
 
       <div className={cn(wallpaper === "none" && "opacity-50")}>
         <div className="mb-2 flex items-center justify-between gap-3">
-          <label htmlFor="wallpaper-overlay" className="text-sm font-medium">
+          <label htmlFor="wallpaper-overlay" className="text-xs font-medium tracking-wide text-[var(--color-muted)]">
             遮罩强度
           </label>
-          <span className="text-xs text-[var(--color-muted)]">{overlay}%</span>
+          <span className="font-mono text-xs tabular-nums text-[var(--color-muted)]">{overlay}%</span>
         </div>
         <input
           id="wallpaper-overlay"
@@ -307,16 +315,16 @@ export function WallpaperPicker({
           }
           className="h-2 w-full cursor-pointer accent-indigo-500 disabled:cursor-not-allowed"
         />
-        <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+        <SettingsFieldHint>
           数值越高背景越接近纯色，文字越清晰
-        </p>
+        </SettingsFieldHint>
       </div>
 
       <FormError message={error} />
 
-      <p className="text-xs text-[var(--color-muted)]">
+      <SettingsFieldHint>
         壁纸偏好已同步到账户，换设备登录后自动恢复
-      </p>
+      </SettingsFieldHint>
     </div>
   );
 }

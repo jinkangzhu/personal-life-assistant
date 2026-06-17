@@ -17,6 +17,12 @@ const activeStyles: Record<PlanStatus, string> = {
   [PlanStatus.ARCHIVED]: "bg-zinc-500/20 text-zinc-200 ring-zinc-500/30",
 };
 
+export const planStatusAccentBar: Record<PlanStatus, string> = {
+  [PlanStatus.ACTIVE]: "bg-indigo-500/70",
+  [PlanStatus.COMPLETED]: "bg-emerald-500/70",
+  [PlanStatus.ARCHIVED]: "bg-zinc-500/50",
+};
+
 export function PlanStatusSelect({
   name = "status",
   defaultValue = PlanStatus.ACTIVE,
@@ -52,5 +58,18 @@ export function PlanStatusSelect({
         })}
       </div>
     </div>
+  );
+}
+
+export function PlanStatusBadge({ status }: { status: PlanStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+        activeStyles[status],
+      )}
+    >
+      {PLAN_STATUS_LABELS[status]}
+    </span>
   );
 }

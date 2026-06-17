@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SettingsFieldHint } from "@/components/settings/settings-ui";
 import {
   THEME_LABELS,
   THEME_STORAGE_KEY,
@@ -39,8 +40,8 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="space-y-2 px-4 pb-4">
-      <div className="flex flex-wrap gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1 w-fit">
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/50 p-1 w-fit">
         {(["dark", "light"] as const).map((option) => {
           const active = theme === option;
           return (
@@ -60,9 +61,7 @@ export function ThemeToggle() {
           );
         })}
       </div>
-      <p className="text-xs text-[var(--color-muted)]">
-        主题偏好保存在本机浏览器中
-      </p>
+      <SettingsFieldHint>主题偏好保存在本机浏览器中</SettingsFieldHint>
     </div>
   );
 }

@@ -19,7 +19,7 @@ interface RecordDetailProps {
 }
 
 const actionButtonClassName =
-  "h-8 gap-1.5 px-2.5 text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-foreground)]";
+  "h-8 gap-1.5 rounded-lg px-3 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-foreground)]";
 
 export function RecordDetail({
   children,
@@ -58,7 +58,7 @@ export function RecordDetail({
   return (
     <>
       {children}
-      <div className="mt-10 flex justify-end gap-2">
+      <div className="mt-8 flex justify-end gap-2 border-t border-[var(--color-border)]/70 pt-5">
         <Button
           type="button"
           variant="ghost"

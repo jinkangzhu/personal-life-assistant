@@ -8,8 +8,14 @@ import { CategorySelect } from "@/components/categories/category-select";
 import { MarkdownField } from "@/components/diary/markdown-field";
 import { TagSelector } from "@/components/tags/tag-selector";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  ModuleAccent,
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleFormSection,
+  ModuleFormShell,
+  ModuleTitleInput,
+} from "@/components/ui/module-ui";
 import type { Category, Tag } from "@prisma/client";
 
 export function NoteCreateForm({
@@ -44,52 +50,56 @@ export function NoteCreateForm({
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
+    <ModuleFormShell>
+      <ModuleAccent module="note" className="mb-8" />
+
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label htmlFor="note-title" className="mb-1.5 block text-xs text-[var(--color-muted)]">
+          <label htmlFor="note-title" className="sr-only">
             标题
           </label>
-          <Input
+          <ModuleTitleInput
             id="note-title"
             name="title"
-            placeholder="笔记标题"
+            placeholder="这条笔记叫什么？"
             maxLength={200}
             required
+            autoFocus
           />
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-muted)]">
+            好标题让你以后搜得到
+          </p>
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            分类
-          </label>
-          <CategorySelect
-            key={`category-${formKey}`}
-            categories={categories}
-            placeholder="无分类"
-          />
-        </div>
+        <ModuleFormSection>
+          <div>
+            <ModuleFormLabel>分类</ModuleFormLabel>
+            <CategorySelect
+              key={`category-${formKey}`}
+              categories={categories}
+              placeholder="无分类"
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            正文（Markdown）
-          </label>
-          <MarkdownField key={`content-${formKey}`} rows={12} />
-        </div>
+          <div>
+            <ModuleFormLabel>正文</ModuleFormLabel>
+            <MarkdownField key={`content-${formKey}`} rows={12} />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            标签
-          </label>
-          <TagSelector key={`tags-${formKey}`} tags={tags} />
-        </div>
+          <div>
+            <ModuleFormLabel>标签</ModuleFormLabel>
+            <TagSelector key={`tags-${formKey}`} tags={tags} />
+          </div>
+        </ModuleFormSection>
 
         <FormError message={error} />
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "保存中…" : "保存笔记"}
-        </Button>
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "保存中…" : "保存笔记"}
+          </Button>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

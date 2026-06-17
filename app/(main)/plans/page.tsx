@@ -19,7 +19,7 @@ export default async function PlansPage({
   return (
     <PageShell
       title="计划"
-      description="短期与长期计划，关联待办并查看进度"
+      description="把方向拆成有起止的步骤，关联待办并看进度"
       action={<PlanCreateButton />}
     >
       <PlanFilterTabs active={filter} />

@@ -1,19 +1,22 @@
 import type { Review } from "@prisma/client";
+import { ReviewCreateButton } from "@/components/reviews/review-create-button";
 import { ReviewItem } from "@/components/reviews/review-item";
-import { EmptyState } from "@/components/ui/card";
+import { ModuleEmptyState } from "@/components/ui/module-ui";
 
 export function ReviewList({ reviews }: { reviews: Review[] }) {
   if (reviews.length === 0) {
     return (
-      <EmptyState
-        variant="dashed"
-        title="暂无复盘，从今日页开始写第一条吧"
+      <ModuleEmptyState
+        module="review"
+        title="还没有复盘"
+        description="对照当日日记与待办完成情况，写下今天的好与坏，以及明天的重点。"
+        action={<ReviewCreateButton />}
       />
     );
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {reviews.map((review) => (
         <ReviewItem key={review.id} review={review} />
       ))}

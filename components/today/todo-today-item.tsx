@@ -6,7 +6,7 @@ import type { DisplayTodoItem } from "@/lib/services/recurring-todo";
 import { isDisplayTodoOverdue } from "@/lib/services/todo";
 import { cn, formatShortDate } from "@/lib/utils";
 import { TodoStatus } from "@prisma/client";
-import { PriorityBadge } from "@/components/todos/priority-badge";
+import { PriorityBadge, priorityAccentBar } from "@/components/todos/priority-badge";
 import { RecurrenceBadge } from "@/components/todos/recurrence-badge";
 import { TodoCheckbox } from "@/components/todos/todo-checkbox";
 import { getTodoHref } from "@/components/todos/todo-item";
@@ -26,12 +26,19 @@ export function TodoTodayItem({
   return (
     <li
       className={cn(
-        "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5 transition-all duration-300 sm:px-4 sm:py-3",
+        "relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5 transition-all duration-300 sm:px-4 sm:py-3",
         "hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]",
         completed && "border-[var(--color-success)]/20 bg-[var(--color-success)]/5",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0 w-0.5",
+          completed ? "bg-emerald-500/70" : priorityAccentBar[todo.priority],
+        )}
+        aria-hidden="true"
+      />
+      <div className="flex items-start gap-3 pl-1">
         <TodoCheckbox todo={todo} className="mt-0.5" />
 
         <div className="min-w-0 flex-1">
@@ -39,7 +46,7 @@ export function TodoTodayItem({
             <Link
               href={getTodoHref(todo)}
               className={cn(
-                "text-sm font-medium hover:text-indigo-400",
+                "text-sm font-medium leading-snug hover:text-indigo-300",
                 completed && "text-[var(--color-muted)] line-through",
               )}
             >

@@ -7,6 +7,11 @@ import { PRIORITY_LABELS } from "@/lib/validators/todo";
 import { TodoCompletionNote } from "@/components/today/todo-completion-note";
 import { PriorityBadge } from "@/components/todos/priority-badge";
 import { RecurrenceBadge } from "@/components/todos/recurrence-badge";
+import {
+  ModuleField,
+  ModuleFieldGrid,
+  ModuleProse,
+} from "@/components/ui/module-ui";
 
 export function RecurringTodoView({
   todo,
@@ -30,9 +35,9 @@ export function RecurringTodoView({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-medium">{todo.title}</h2>
+        <h2 className="text-lg font-medium leading-snug tracking-tight">{todo.title}</h2>
         <PriorityBadge priority={todo.priority} />
         <RecurrenceBadge
           label={recurrenceLabel}
@@ -41,17 +46,17 @@ export function RecurringTodoView({
         />
       </div>
 
-      <dl className="grid gap-3 sm:grid-cols-2">
-        <Field label="重复" value={RECURRENCE_TYPE_LABELS[todo.recurrenceType]} />
-        <Field label="规则" value={recurrenceLabel} />
-        <Field label="优先级" value={PRIORITY_LABELS[todo.priority]} />
+      <ModuleFieldGrid>
+        <ModuleField label="重复" value={RECURRENCE_TYPE_LABELS[todo.recurrenceType]} />
+        <ModuleField label="规则" value={recurrenceLabel} />
+        <ModuleField label="优先级" value={PRIORITY_LABELS[todo.priority]} />
         {todo.activityType && (
-          <Field label="活动类型" value={todo.activityType.name} />
+          <ModuleField label="活动类型" value={todo.activityType.name} />
         )}
         {todo.estimatedMinutes && (
-          <Field label="预估时长" value={formatMinutes(todo.estimatedMinutes)} />
+          <ModuleField label="预估时长" value={formatMinutes(todo.estimatedMinutes)} />
         )}
-        <Field
+        <ModuleField
           label="状态"
           value={
             todo.deletedAt
@@ -61,17 +66,23 @@ export function RecurringTodoView({
                 : "已暂停"
           }
         />
-        <Field label="开始日期" value={formatShortDate(todo.startDate)} />
-        <Field label="结束日期" value={formatShortDate(todo.endDate)} />
+        <ModuleField label="开始日期" value={formatShortDate(todo.startDate)} />
+        <ModuleField label="结束日期" value={formatShortDate(todo.endDate)} />
         {todo.plan && (
-          <Field label="关联计划" value={todo.plan.title} className="sm:col-span-2" />
+          <ModuleField
+            label="关联计划"
+            value={todo.plan.title}
+            className="sm:col-span-2"
+          />
         )}
-      </dl>
+      </ModuleFieldGrid>
 
       {todo.description && (
-        <section>
-          <h3 className="mb-1.5 text-xs text-[var(--color-muted)]">描述</h3>
-          <p className="whitespace-pre-wrap text-sm">{todo.description}</p>
+        <section className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wide text-[var(--color-muted)]">
+            补充说明
+          </h3>
+          <ModuleProse>{todo.description}</ModuleProse>
         </section>
       )}
 
@@ -130,23 +141,6 @@ export function RecurringTodoView({
           此循环待办已删除，历史完成记录仍保留。
         </p>
       )}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <dt className="text-xs text-[var(--color-muted)]">{label}</dt>
-      <dd className="mt-0.5 text-sm">{value}</dd>
     </div>
   );
 }

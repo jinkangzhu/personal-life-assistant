@@ -7,12 +7,14 @@ import { PlanStatusSelect } from "@/components/plans/plan-status-select";
 import { PlanTypeSelect } from "@/components/plans/plan-type-select";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
+import {
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleTitleInput,
+  moduleTextareaClassName,
+} from "@/components/ui/module-ui";
 import type { PlanWithTodos } from "@/lib/services/plan";
 import { toDateInputValue } from "@/lib/utils";
-
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function PlanEditForm({
   plan,
@@ -42,12 +44,12 @@ export function PlanEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="title" className="mb-1.5 block text-sm text-[var(--color-muted)]">
+        <label htmlFor="title" className="sr-only">
           标题
         </label>
-        <Input
+        <ModuleTitleInput
           id="title"
           name="title"
           defaultValue={plan.title}
@@ -57,46 +59,37 @@ export function PlanEditForm({
       </div>
 
       <div>
-        <label htmlFor="description" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          描述
-        </label>
+        <ModuleFormLabel htmlFor="description">背景与范围</ModuleFormLabel>
         <textarea
           id="description"
           name="description"
           rows={4}
           defaultValue={plan.description ?? ""}
-          className={textareaClassName}
+          placeholder="计划覆盖什么？边界在哪里？"
+          className={moduleTextareaClassName}
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          类型
-        </label>
+        <ModuleFormLabel>类型</ModuleFormLabel>
         <PlanTypeSelect defaultValue={plan.type} />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          状态
-        </label>
+        <ModuleFormLabel>当前状态</ModuleFormLabel>
         <PlanStatusSelect defaultValue={plan.status} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            开始日期
-          </label>
+          <ModuleFormLabel>开始日期</ModuleFormLabel>
           <DatePicker
             name="startDate"
             defaultValue={toDateInputValue(plan.startDate)}
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            结束日期
-          </label>
+          <ModuleFormLabel>结束日期</ModuleFormLabel>
           <DatePicker
             name="endDate"
             defaultValue={toDateInputValue(plan.endDate)}
@@ -106,14 +99,14 @@ export function PlanEditForm({
 
       <FormError message={error} />
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <ModuleFormActions className="border-t-0 pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "保存中…" : "保存"}
         </Button>
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
           取消
         </Button>
-      </div>
+      </ModuleFormActions>
     </form>
   );
 }

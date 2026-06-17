@@ -4,15 +4,21 @@ import { FormError } from "@/components/ui/form-error";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createGoal } from "@/app/(main)/goals/actions";
+import {
+  GoalFormLabel,
+  GoalHorizon,
+  GoalTitleInput,
+  goalTextareaClassName,
+} from "@/components/goals/goal-form-styles";
 import { GoalStatusSelect } from "@/components/goals/goal-status-select";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  ModuleFormActions,
+  ModuleFormSection,
+  ModuleFormShell,
+} from "@/components/ui/module-ui";
 
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
-
-export function GoalCreateForm({ onCancel }: { onCancel?: () => void }) {
+export function GoalCreateForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -32,59 +38,58 @@ export function GoalCreateForm({ onCancel }: { onCancel?: () => void }) {
         }
         return;
       }
-      setError(result.error ?? "????");
+      setError(result.error ?? "创建失败");
     });
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
+    <ModuleFormShell>
+      <GoalHorizon className="mb-8" />
+
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label htmlFor="goal-title" className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            ??
+          <label htmlFor="goal-title" className="sr-only">
+            标题
           </label>
-          <Input
+          <GoalTitleInput
             id="goal-title"
             name="title"
-            placeholder="????????? AI Agent"
+            placeholder="你想成为什么，或做到什么？"
             maxLength={200}
             required
+            autoFocus
           />
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-muted)]">
+            例如：提升英语、学习 AI Agent、完成一次马拉松
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="goal-description" className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            ??????
-          </label>
-          <textarea
-            id="goal-description"
-            name="description"
-            rows={4}
-            placeholder="???????????"
-            className={textareaClassName}
-          />
-        </div>
+        <ModuleFormSection>
+          <div>
+            <GoalFormLabel htmlFor="goal-description">背景与期望</GoalFormLabel>
+            <textarea
+              id="goal-description"
+              name="description"
+              rows={5}
+              placeholder="为什么重要？希望看到什么变化？"
+              className={goalTextareaClassName}
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            ??
-          </label>
-          <GoalStatusSelect key={`status-${formKey}`} />
-        </div>
+          <div>
+            <GoalFormLabel>当前状态</GoalFormLabel>
+            <GoalStatusSelect key={`status-${formKey}`} />
+          </div>
+        </ModuleFormSection>
 
         <FormError message={error} />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={pending}>
-            {pending ? "????" : "????"}
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "保存中…" : "保存目标"}
           </Button>
-          {onCancel && (
-            <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
-              ??
-            </Button>
-          )}
-        </div>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

@@ -1,18 +1,24 @@
 "use client";
-import { FormError } from '@/components/ui/form-error';
+import { FormError } from "@/components/ui/form-error";
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createDiary } from "@/app/(main)/diary/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { DatePicker } from "@/components/ui/date-picker";
 import { MarkdownField } from "@/components/diary/markdown-field";
 import { MoodSelect } from "@/components/diary/mood-select";
 import { TagSelector } from "@/components/tags/tag-selector";
-import type { Tag } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  ModuleAccent,
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleFormSection,
+  ModuleFormShell,
+  ModuleTitleInput,
+} from "@/components/ui/module-ui";
 import { toDateInputValue } from "@/lib/utils";
+import type { Tag } from "@prisma/client";
 
 export function DiaryCreateForm({ tags = [] }: { tags?: Tag[] }) {
   const router = useRouter();
@@ -41,25 +47,26 @@ export function DiaryCreateForm({ tags = [] }: { tags?: Tag[] }) {
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+    <ModuleFormShell>
+      <ModuleAccent module="diary" className="mb-8" />
+
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
           <div>
-            <label htmlFor="diary-title" className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              标题（可选）
+            <label htmlFor="diary-title" className="sr-only">
+              标题
             </label>
-            <Input
+            <ModuleTitleInput
               id="diary-title"
               name="title"
-              placeholder="今天发生了什么？"
+              placeholder="今天想记住什么？"
               maxLength={200}
+              autoFocus
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              日期
-            </label>
+            <ModuleFormLabel>日期</ModuleFormLabel>
             <DatePicker
               key={`date-${formKey}`}
               name="date"
@@ -69,33 +76,31 @@ export function DiaryCreateForm({ tags = [] }: { tags?: Tag[] }) {
           </div>
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            心情
-          </label>
-          <MoodSelect key={`mood-${formKey}`} />
-        </div>
+        <ModuleFormSection>
+          <div>
+            <ModuleFormLabel>心情</ModuleFormLabel>
+            <MoodSelect key={`mood-${formKey}`} />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            正文（Markdown）
-          </label>
-          <MarkdownField key={`content-${formKey}`} rows={6} />
-        </div>
+          <div>
+            <ModuleFormLabel>正文</ModuleFormLabel>
+            <MarkdownField key={`content-${formKey}`} rows={8} />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            标签
-          </label>
-          <TagSelector key={`tags-${formKey}`} tags={tags} />
-        </div>
+          <div>
+            <ModuleFormLabel>标签</ModuleFormLabel>
+            <TagSelector key={`tags-${formKey}`} tags={tags} />
+          </div>
+        </ModuleFormSection>
 
         <FormError message={error} />
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "保存中…" : "保存日记"}
-        </Button>
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "保存中…" : "保存日记"}
+          </Button>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

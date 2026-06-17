@@ -7,7 +7,8 @@ import { RecordDetail } from "@/components/detail/record-detail";
 import { GoalEditForm } from "@/components/goals/goal-edit-form";
 import { GoalPlansSection } from "@/components/goals/goal-plans-section";
 import { GoalView } from "@/components/goals/goal-view";
-import { Card } from "@/components/ui/card";
+import { goalStatusAccentBar } from "@/components/goals/goal-status-select";
+import { ModulePanel } from "@/components/ui/module-ui";
 import type { GoalWithPlans } from "@/lib/services/goal";
 import type { PlanWithProgress } from "@/lib/services/plan";
 
@@ -30,7 +31,7 @@ export function GoalDetail({
 
   return (
     <div className="space-y-6">
-      <Card className="px-4 py-4">
+      <ModulePanel module="goal" accentClassName={goalStatusAccentBar[goal.status]}>
         <RecordDetail
           onDelete={handleDelete}
           deletePending={deletePending}
@@ -51,7 +52,7 @@ export function GoalDetail({
         >
           <GoalView goal={goal} />
         </RecordDetail>
-      </Card>
+      </ModulePanel>
 
       {!editing && (
         <GoalPlansSection goal={goal} unlinkedPlans={unlinkedPlans} />

@@ -17,13 +17,9 @@ import { TodoCheckbox } from "@/components/todos/todo-checkbox";
 import { formatRecurrenceLabel, parseWeeklyDays } from "@/lib/recurrence";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  EmptyState,
-} from "@/components/ui/card";
+  ModuleInlineEmpty,
+  ModuleSectionPanel,
+} from "@/components/ui/module-ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -167,39 +163,38 @@ export function PlanTodosSection({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>关联待办</CardTitle>
-          <CardAction>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setCreateOpen(true)}
-              >
-                新增待办
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setLinkOpen(true)}
-              >
-                关联待办
-              </Button>
-            </div>
-          </CardAction>
-        </CardHeader>
-
+      <ModuleSectionPanel
+        module="todo"
+        title="关联待办"
+        description="在此计划下创建或关联待办，推进执行"
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setCreateOpen(true)}
+            >
+              新增待办
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setLinkOpen(true)}
+            >
+              关联待办
+            </Button>
+          </div>
+        }
+      >
         {plan.todos.length === 0 && plan.recurringTodos.length === 0 ? (
-          <EmptyState
+          <ModuleInlineEmpty
             title="还没有关联待办"
             description="点击「新增待办」创建并关联，或「关联待办」选择已有待办"
           />
         ) : (
-          <CardContent className="pt-0">
-            <ul className="space-y-2">
+          <ul className="space-y-2.5">
               {plan.todos.map((todo) => {
                 const completed = todo.status === TodoStatus.COMPLETED;
                 return (
@@ -282,9 +277,8 @@ export function PlanTodosSection({
                 </li>
               ))}
             </ul>
-          </CardContent>
         )}
-      </Card>
+      </ModuleSectionPanel>
 
       <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
         <DialogPortal>

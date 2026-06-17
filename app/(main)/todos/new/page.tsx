@@ -10,7 +10,7 @@ export default async function TodoNewPage() {
   return (
     <PageShell
       title="添加待办"
-      description="创建新的待办任务"
+      description="写清楚下一步动作，需要时再补充说明"
       backHref="/todos"
       backLabel="返回列表"
     >

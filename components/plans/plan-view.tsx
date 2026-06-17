@@ -1,9 +1,12 @@
 import { PlanProgressBar } from "@/components/plans/plan-progress";
-import type { PlanWithTodos } from "@/lib/services/plan";
+import { PlanStatusBadge } from "@/components/plans/plan-status-select";
 import {
-  PLAN_STATUS_LABELS,
-  PLAN_TYPE_LABELS,
-} from "@/lib/validators/plan";
+  ModuleMetaDivider,
+  ModuleMetaRow,
+  ModuleProse,
+} from "@/components/ui/module-ui";
+import type { PlanWithTodos } from "@/lib/services/plan";
+import { PLAN_TYPE_LABELS } from "@/lib/validators/plan";
 
 export function PlanView({ plan }: { plan: PlanWithTodos }) {
   const dateRange = [plan.startDate, plan.endDate]
@@ -14,28 +17,34 @@ export function PlanView({ plan }: { plan: PlanWithTodos }) {
     .join(" — ");
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--color-muted)]">
+    <div className="space-y-5">
+      <ModuleMetaRow>
+        <PlanStatusBadge status={plan.status} />
         <span>{PLAN_TYPE_LABELS[plan.type]}</span>
-        <span>{PLAN_STATUS_LABELS[plan.status]}</span>
+        <ModuleMetaDivider />
         <span>{dateRange || "未设置日期"}</span>
-        <span>
-          创建于 {new Date(plan.createdAt).toLocaleString("zh-CN")}
-        </span>
+        <ModuleMetaDivider />
+        <span>创建于 {new Date(plan.createdAt).toLocaleString("zh-CN")}</span>
         {plan.updatedAt.getTime() !== plan.createdAt.getTime() && (
-          <span>
-            更新于 {new Date(plan.updatedAt).toLocaleString("zh-CN")}
-          </span>
+          <>
+            <ModuleMetaDivider />
+            <span>更新于 {new Date(plan.updatedAt).toLocaleString("zh-CN")}</span>
+          </>
         )}
-      </div>
+      </ModuleMetaRow>
 
-      {plan.description && (
-        <p className="whitespace-pre-wrap text-sm text-[var(--color-foreground)]">
-          {plan.description}
-        </p>
+      {plan.description ? (
+        <ModuleProse>{plan.description}</ModuleProse>
+      ) : (
+        <p className="text-sm text-[var(--color-muted)]">暂无背景描述</p>
       )}
 
-      <PlanProgressBar progress={plan.progress} />
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-wide text-[var(--color-muted)]">
+          待办进度
+        </p>
+        <PlanProgressBar progress={plan.progress} />
+      </div>
     </div>
   );
 }

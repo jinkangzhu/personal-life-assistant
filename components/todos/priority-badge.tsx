@@ -8,6 +8,12 @@ const styles: Record<Priority, string> = {
   HIGH: "bg-amber-500/15 text-amber-400 ring-amber-500/20",
 };
 
+export const priorityAccentBar: Record<Priority, string> = {
+  LOW: "bg-zinc-500/45",
+  MEDIUM: "bg-indigo-500/70",
+  HIGH: "bg-amber-500/75",
+};
+
 export function PriorityBadge({
   priority,
   className,

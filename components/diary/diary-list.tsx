@@ -1,14 +1,16 @@
-import { EmptyState } from "@/components/ui/card";
+import { DiaryWriteButton } from "@/components/diary/diary-write-button";
 import type { DiaryDateGroup as DiaryDateGroupType } from "@/lib/services/diary";
+import { ModuleEmptyState } from "@/components/ui/module-ui";
 import { DiaryDateGroup } from "./diary-item";
 
 export function DiaryList({ groups }: { groups: DiaryDateGroupType[] }) {
   if (groups.length === 0) {
     return (
-      <EmptyState
-        variant="dashed"
-        title="暂无日记"
-        description="点击下方「写日记」开始记录"
+      <ModuleEmptyState
+        module="diary"
+        title="还没有日记"
+        description="记录今天发生的事、学到的东西，以及当时的心情。"
+        action={<DiaryWriteButton />}
       />
     );
   }

@@ -10,8 +10,9 @@ import {
 import { RecordDetail } from "@/components/detail/record-detail";
 import { RecurringTodoEditForm } from "@/components/todos/recurring-todo-edit-form";
 import { RecurringTodoView } from "@/components/todos/recurring-todo-view";
+import { priorityAccentBar } from "@/components/todos/priority-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { ModulePanel } from "@/components/ui/module-ui";
 import type { ActivityType } from "@prisma/client";
 import type { RecurringTodoWithPlan, DisplayTodoItem } from "@/lib/services/recurring-todo";
 
@@ -54,7 +55,7 @@ export function RecurringTodoDetail({
   }
 
   return (
-    <Card className="px-4 py-4">
+    <ModulePanel module="todo" accentClassName={priorityAccentBar[todo.priority]}>
       <RecordDetail
         onDelete={todo.deletedAt ? undefined : handleDelete}
         deletePending={deletePending}
@@ -78,7 +79,7 @@ export function RecurringTodoDetail({
       </RecordDetail>
 
       {!todo.deletedAt && (
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--color-border)] pt-4">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--color-border)]/70 pt-4">
           <Button
             type="button"
             size="sm"
@@ -94,6 +95,6 @@ export function RecurringTodoDetail({
           </Button>
         </div>
       )}
-    </Card>
+    </ModulePanel>
   );
 }

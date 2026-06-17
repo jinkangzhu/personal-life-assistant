@@ -7,7 +7,11 @@ import { CategorySelect } from "@/components/categories/category-select";
 import { MarkdownField } from "@/components/diary/markdown-field";
 import { TagSelector } from "@/components/tags/tag-selector";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleTitleInput,
+} from "@/components/ui/module-ui";
 import type { NoteWithRelations } from "@/lib/services/note";
 import { tagsToInputValue } from "@/lib/services/tag";
 import type { Category, Tag } from "@prisma/client";
@@ -44,25 +48,23 @@ export function NoteEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="title" className="mb-1.5 block text-sm text-[var(--color-muted)]">
+        <label htmlFor="title" className="sr-only">
           标题
         </label>
-        <Input
+        <ModuleTitleInput
           id="title"
           name="title"
           defaultValue={note.title}
-          placeholder="笔记标题"
+          placeholder="这条笔记叫什么？"
           maxLength={200}
           required
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          分类
-        </label>
+        <ModuleFormLabel>分类</ModuleFormLabel>
         <CategorySelect
           categories={categories}
           defaultValue={note.categoryId}
@@ -71,16 +73,12 @@ export function NoteEditForm({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          正文（Markdown）
-        </label>
+        <ModuleFormLabel>正文</ModuleFormLabel>
         <MarkdownField defaultValue={note.content} rows={12} />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          标签
-        </label>
+        <ModuleFormLabel>标签</ModuleFormLabel>
         <TagSelector
           tags={tags}
           defaultValue={tagsToInputValue(note.tags)}
@@ -89,14 +87,14 @@ export function NoteEditForm({
 
       <FormError message={error} />
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <ModuleFormActions className="border-t-0 pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "保存中…" : "保存"}
         </Button>
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
           取消
         </Button>
-      </div>
+      </ModuleFormActions>
     </form>
   );
 }

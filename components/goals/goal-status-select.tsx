@@ -17,6 +17,12 @@ const activeStyles: Record<GoalStatus, string> = {
   [GoalStatus.PAUSED]: "bg-amber-500/20 text-amber-300 ring-amber-500/30",
 };
 
+export const goalStatusAccentBar: Record<GoalStatus, string> = {
+  [GoalStatus.ACTIVE]: "bg-indigo-500/70",
+  [GoalStatus.COMPLETED]: "bg-emerald-500/70",
+  [GoalStatus.PAUSED]: "bg-amber-500/70",
+};
+
 export function GoalStatusSelect({
   name = "status",
   defaultValue = GoalStatus.ACTIVE,

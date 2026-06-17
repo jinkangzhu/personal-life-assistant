@@ -28,7 +28,7 @@ export default async function NotesPage({
   return (
     <PageShell
       title="笔记"
-      description="浏览已写好的笔记"
+      description="沉淀可复用的知识，分类和标签帮你以后找得到"
       action={<NoteCreateButton />}
     >
       {hasFilters && (

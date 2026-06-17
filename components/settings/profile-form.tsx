@@ -1,11 +1,13 @@
 "use client";
-import { FormError, FormSuccess } from '@/components/ui/form-error';
+import { FormError, FormSuccess } from "@/components/ui/form-error";
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateDisplayNameAction } from "@/app/(main)/settings/actions";
+import { SettingsFieldHint } from "@/components/settings/settings-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ModuleFormActions, ModuleFormLabel } from "@/components/ui/module-ui";
 
 export function ProfileForm({
   email,
@@ -37,18 +39,15 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="email" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          邮箱
-        </label>
+        <ModuleFormLabel htmlFor="email">邮箱</ModuleFormLabel>
         <Input id="email" value={email} disabled readOnly />
+        <SettingsFieldHint>登录账号，不可修改</SettingsFieldHint>
       </div>
 
       <div>
-        <label htmlFor="displayName" className="mb-1.5 block text-sm text-[var(--color-muted)]">
-          昵称
-        </label>
+        <ModuleFormLabel htmlFor="displayName">昵称</ModuleFormLabel>
         <Input
           id="displayName"
           name="displayName"
@@ -61,9 +60,11 @@ export function ProfileForm({
       <FormError message={error} />
       <FormSuccess message={success} />
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "保存中…" : "保存昵称"}
-      </Button>
+      <ModuleFormActions className="border-t-0 pt-0">
+        <Button type="submit" disabled={pending}>
+          {pending ? "保存中…" : "保存昵称"}
+        </Button>
+      </ModuleFormActions>
     </form>
   );
 }

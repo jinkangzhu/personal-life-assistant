@@ -4,19 +4,23 @@ import { FormError } from "@/components/ui/form-error";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createTodo } from "@/app/(main)/todos/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { DatePicker } from "@/components/ui/date-picker";
-import { PrioritySelect } from "@/components/ui/priority-select";
 import { ActivityTypeSelect } from "@/components/activity-types/activity-type-select";
 import { DurationInput } from "@/components/todos/duration-input";
 import { RecurrenceFields, type RecurrenceFormValue } from "@/components/todos/recurrence-fields";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  ModuleAccent,
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleFormSection,
+  ModuleFormShell,
+  ModuleTitleInput,
+  moduleTextareaClassName,
+} from "@/components/ui/module-ui";
+import { PrioritySelect } from "@/components/ui/priority-select";
 import { cn } from "@/lib/utils";
 import type { ActivityType } from "@prisma/client";
-
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function TodoCreateForm({
   activityTypes = [],
@@ -55,89 +59,89 @@ export function TodoCreateForm({
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
+    <ModuleFormShell>
+      <ModuleAccent module="todo" className="mb-8" />
+
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label htmlFor="todo-title" className="mb-1.5 block text-xs text-[var(--color-muted)]">
+          <label htmlFor="todo-title" className="sr-only">
             标题
           </label>
-          <Input
+          <ModuleTitleInput
             id="todo-title"
             name="title"
-            placeholder="今天要做什么？"
+            placeholder="接下来要做什么？"
             required
             maxLength={200}
+            autoFocus
           />
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-muted)]">
+            写清楚动作，比写长描述更有用
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="todo-description" className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            描述（可选）
-          </label>
-          <textarea
-            id="todo-description"
-            name="description"
-            rows={3}
-            placeholder="补充说明…"
-            className={textareaClassName}
-          />
-        </div>
-
-        <RecurrenceFields
-          key={`recurrence-${formKey}`}
-          onRecurrenceChange={setRecurrence}
-        />
-
-        <div
-          className={cn(
-            "grid gap-4",
-            recurrence === "none" ? "sm:grid-cols-2" : "sm:grid-cols-1",
-          )}
-        >
-          {recurrence === "none" && (
-            <div>
-              <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-                截止日期
-              </label>
-              <DatePicker key={`date-${formKey}`} name="dueDate" />
-            </div>
-          )}
-
+        <ModuleFormSection>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              优先级
-            </label>
-            <PrioritySelect key={`priority-${formKey}`} />
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              预估时长
-            </label>
-            <DurationInput key={`estimated-${formKey}`} name="estimatedMinutes" />
+            <ModuleFormLabel htmlFor="todo-description">补充说明</ModuleFormLabel>
+            <textarea
+              id="todo-description"
+              name="description"
+              rows={3}
+              placeholder="链接、上下文、完成标准…"
+              className={moduleTextareaClassName}
+            />
           </div>
 
-          {activityTypes.length > 0 && (
+          <RecurrenceFields
+            key={`recurrence-${formKey}`}
+            onRecurrenceChange={setRecurrence}
+          />
+
+          <div
+            className={cn(
+              "grid gap-4",
+              recurrence === "none" ? "sm:grid-cols-2" : "sm:grid-cols-1",
+            )}
+          >
+            {recurrence === "none" && (
+              <div>
+                <ModuleFormLabel>截止日期</ModuleFormLabel>
+                <DatePicker key={`date-${formKey}`} name="dueDate" />
+              </div>
+            )}
+
             <div>
-              <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-                活动类型
-              </label>
-              <ActivityTypeSelect
-                key={`activity-${formKey}`}
-                activityTypes={activityTypes}
-              />
+              <ModuleFormLabel>优先级</ModuleFormLabel>
+              <PrioritySelect key={`priority-${formKey}`} />
             </div>
-          )}
-        </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <ModuleFormLabel>预估时长</ModuleFormLabel>
+              <DurationInput key={`estimated-${formKey}`} name="estimatedMinutes" />
+            </div>
+
+            {activityTypes.length > 0 && (
+              <div>
+                <ModuleFormLabel>活动类型</ModuleFormLabel>
+                <ActivityTypeSelect
+                  key={`activity-${formKey}`}
+                  activityTypes={activityTypes}
+                />
+              </div>
+            )}
+          </div>
+        </ModuleFormSection>
 
         <FormError message={error} />
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "创建中…" : "添加待办"}
-        </Button>
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "创建中…" : "添加待办"}
+          </Button>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

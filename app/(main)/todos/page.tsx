@@ -85,7 +85,7 @@ export default async function TodosPage({
 
       title="待办"
 
-      description="浏览并管理你的待办"
+      description="列出要做的事，按优先级和截止日期推进"
 
       action={<TodoCreateButton />}
 

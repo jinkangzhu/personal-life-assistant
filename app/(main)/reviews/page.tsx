@@ -11,12 +11,10 @@ export default async function ReviewsPage() {
   return (
     <PageShell
       title="复盘"
-      description="每日复盘，自动引用当日日记与待办完成情况"
+      description="对照当日记录，总结得失并定说明天的重点"
+      action={<ReviewCreateButton />}
     >
       <ReviewList reviews={reviews} />
-      <div className="flex justify-center pt-4">
-        <ReviewCreateButton />
-      </div>
     </PageShell>
   );
 }

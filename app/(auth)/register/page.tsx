@@ -1,9 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AuthField,
+  AuthFooterText,
+  AuthLink,
+  AuthShell,
+} from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import { FormError } from "@/components/ui/form-error";
 import { Input } from "@/components/ui/input";
 
 export default function RegisterPage() {
@@ -46,98 +52,58 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-violet-600/15 blur-3xl" />
-      </div>
+    <AuthShell
+      title="创建账号"
+      description="注册后即可使用个人生活助手"
+      footer={
+        <AuthFooterText>
+          已有账号？ <AuthLink href="/login">登录</AuthLink>
+        </AuthFooterText>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField label="邮箱" htmlFor="email">
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="me@example.com"
+            required
+            autoComplete="email"
+          />
+        </AuthField>
 
-      <div className="animate-fade-in relative w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600/20 text-2xl ring-1 ring-indigo-500/30">
-            ✦
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">创建账号</h1>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            注册后即可使用个人生活助手
-          </p>
-        </div>
+        <AuthField label="昵称" htmlFor="displayName" hint="可选，用于界面显示">
+          <Input
+            id="displayName"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Me"
+            autoComplete="nickname"
+          />
+        </AuthField>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-xl shadow-black/20"
-        >
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-1.5 block text-sm text-[var(--color-muted)]"
-              >
-                邮箱
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="me@example.com"
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="displayName"
-                className="mb-1.5 block text-sm text-[var(--color-muted)]"
-              >
-                昵称（可选）
-              </label>
-              <Input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Me"
-                autoComplete="nickname"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1.5 block text-sm text-[var(--color-muted)]"
-              >
-                密码
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="至少 8 位"
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
+        <AuthField label="密码" htmlFor="password" hint="至少 8 位">
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </AuthField>
 
-          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+        <FormError message={error} className="pt-1" />
 
-          <Button type="submit" className="mt-6 w-full" disabled={loading}>
-            {loading ? "注册中…" : "注册"}
-          </Button>
-
-          <p className="mt-4 text-center text-sm text-[var(--color-muted)]">
-            已有账号？{" "}
-            <Link
-              href="/login"
-              className="text-indigo-400 hover:text-indigo-300"
-            >
-              登录
-            </Link>
-          </p>
-        </form>
-      </div>
-    </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "注册中…" : "注册"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

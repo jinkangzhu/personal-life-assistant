@@ -17,15 +17,16 @@ export function NoteItem({ note }: { note: NoteWithRelations }) {
       <Link
         href={`/notes/${note.id}`}
         className={cn(
-          "group block rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 transition",
+          "group relative block overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3.5 transition",
           "hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]",
         )}
       >
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <span className="text-sm font-medium group-hover:text-indigo-400">
+        <div className="absolute inset-y-0 left-0 w-0.5 bg-violet-400/55" aria-hidden="true" />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <span className="text-[0.9375rem] font-medium leading-snug tracking-tight transition group-hover:text-indigo-300">
             {note.title}
           </span>
-          <span className="shrink-0 text-xs text-[var(--color-muted)]">
+          <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-[var(--color-muted)]">
             {updatedLabel}
           </span>
         </div>

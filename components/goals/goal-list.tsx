@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,12 +18,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { reorderGoalsAction } from "@/app/(main)/goals/actions";
 import { GoalPlanStatsSummary } from "@/components/goals/goal-plan-stats";
-import { GoalStatusBadge } from "@/components/goals/goal-status-select";
-import { EmptyState } from "@/components/ui/card";
+import {
+  GoalStatusBadge,
+  goalStatusAccentBar,
+} from "@/components/goals/goal-status-select";
+import { CreateLinkButton } from "@/components/ui/create-link-button";
+import { ModuleEmptyState } from "@/components/ui/module-ui";
 import { goalDescriptionSummary, type GoalWithPlans } from "@/lib/services/goal";
 import { useSortableListSensors } from "@/lib/utils/sortable-list";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 function SortableGoalItem({ goal }: { goal: GoalWithPlans }) {
   const {
@@ -55,13 +59,23 @@ function SortableGoalItem({ goal }: { goal: GoalWithPlans }) {
     >
       <div
         className={cn(
-          "flex items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-3 transition",
-          isDragging && "border-indigo-500/40 shadow-lg ring-2 ring-indigo-500/20",
+          "group/item relative flex items-start gap-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] transition",
+          isDragging
+            ? "border-indigo-500/40 shadow-lg ring-2 ring-indigo-500/20"
+            : "hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]",
         )}
       >
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-0.5",
+            goalStatusAccentBar[goal.status],
+          )}
+          aria-hidden="true"
+        />
+
         <button
           type="button"
-          className="mt-0.5 flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md p-1 text-[var(--color-muted)] transition hover:bg-[var(--color-card-hover)] hover:text-indigo-400 active:cursor-grabbing"
+          className="ml-2.5 mt-3 flex shrink-0 cursor-grab touch-none items-center justify-center rounded-md p-1 text-[var(--color-muted)] opacity-0 transition hover:bg-[var(--color-card-hover)] hover:text-indigo-400 active:cursor-grabbing group-hover/item:opacity-100 focus-visible:opacity-100"
           aria-label={`拖拽排序 ${goal.title}`}
           {...attributes}
           {...listeners}
@@ -69,13 +83,10 @@ function SortableGoalItem({ goal }: { goal: GoalWithPlans }) {
           <GripVertical className="h-4 w-4" />
         </button>
 
-        <Link
-          href={`/goals/${goal.id}`}
-          className="group min-w-0 flex-1"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium group-hover:text-indigo-400">
+        <Link href={`/goals/${goal.id}`} className="min-w-0 flex-1 px-3 py-3.5 pr-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 space-y-2.5">
+              <p className="text-[0.9375rem] font-medium leading-snug tracking-tight transition group-hover/item:text-indigo-300">
                 {goal.title}
               </p>
               <div className="flex flex-wrap items-center gap-2">
@@ -83,13 +94,13 @@ function SortableGoalItem({ goal }: { goal: GoalWithPlans }) {
                 <GoalPlanStatsSummary stats={goal.planStats} />
               </div>
             </div>
-            <span className="shrink-0 text-xs text-[var(--color-muted)]">
+            <span className="shrink-0 pt-0.5 font-mono text-[0.6875rem] tabular-nums text-[var(--color-muted)]">
               {updatedLabel}
             </span>
           </div>
 
           {summary && (
-            <p className="mt-2 line-clamp-2 text-sm text-[var(--color-muted)]">
+            <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-[var(--color-muted)]">
               {summary}
             </p>
           )}
@@ -136,15 +147,17 @@ export function GoalList({ goals }: { goals: GoalWithPlans[] }) {
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        variant="dashed"
-        title="暂无长期目标，记录你的发展方向吧"
+      <ModuleEmptyState
+        module="goal"
+        title="还没有长期目标"
+        description="先写下你想去的方向。之后可以关联计划，把大方向拆成可执行的步骤。"
+        action={<CreateLinkButton href="/goals/new" label="写下第一个目标" />}
       />
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -154,7 +167,7 @@ export function GoalList({ goals }: { goals: GoalWithPlans[] }) {
           items={items.map((item) => item.id)}
           strategy={verticalListSortingStrategy}
         >
-          <ul className="space-y-2">
+          <ul className="space-y-2.5">
             {items.map((goal) => (
               <SortableGoalItem key={goal.id} goal={goal} />
             ))}
@@ -164,7 +177,7 @@ export function GoalList({ goals }: { goals: GoalWithPlans[] }) {
 
       {reorderError && <p className="text-sm text-red-400">{reorderError}</p>}
       <p className="text-xs text-[var(--color-muted)]">
-        拖拽左侧手柄调整目标顺序。
+        左侧色条表示状态。悬停后拖拽手柄可调整顺序。
       </p>
     </div>
   );

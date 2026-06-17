@@ -6,7 +6,7 @@ import { deleteDiary } from "@/app/(main)/diary/actions";
 import { RecordDetail } from "@/components/detail/record-detail";
 import { DiaryEditForm } from "@/components/diary/diary-edit-form";
 import { DiaryView } from "@/components/diary/diary-view";
-import { Card } from "@/components/ui/card";
+import { ModulePanel } from "@/components/ui/module-ui";
 import type { DiaryWithTags } from "@/lib/services/diary";
 import type { Tag } from "@prisma/client";
 
@@ -27,7 +27,7 @@ export function DiaryDetail({
   }
 
   return (
-    <Card className="px-4 py-4">
+    <ModulePanel module="diary">
       <RecordDetail
         onDelete={handleDelete}
         deletePending={deletePending}
@@ -48,6 +48,6 @@ export function DiaryDetail({
       >
         <DiaryView entry={entry} />
       </RecordDetail>
-    </Card>
+    </ModulePanel>
   );
 }

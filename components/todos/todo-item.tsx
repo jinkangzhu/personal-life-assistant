@@ -5,7 +5,7 @@ import { isDisplayTodoOverdue } from "@/lib/services/todo";
 import { cn, formatShortDate } from "@/lib/utils";
 import { TodoStatus } from "@prisma/client";
 import { TodoCompletionNote } from "@/components/today/todo-completion-note";
-import { PriorityBadge } from "./priority-badge";
+import { PriorityBadge, priorityAccentBar } from "./priority-badge";
 import { RecurrenceBadge } from "./recurrence-badge";
 import { TodoCheckbox } from "./todo-checkbox";
 
@@ -31,11 +31,18 @@ export function TodoItem({
   return (
     <Wrapper
       className={cn(
-        "flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 transition-all duration-300",
+        "relative flex items-start gap-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3.5 transition-all duration-300",
         "hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]",
         completed && "border-[var(--color-success)]/20 bg-[var(--color-success)]/5",
       )}
     >
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0 w-0.5",
+          completed ? "bg-emerald-500/70" : priorityAccentBar[todo.priority],
+        )}
+        aria-hidden="true"
+      />
       {showCheckbox ? (
         <TodoCheckbox todo={todo} className="mt-0.5" />
       ) : (
@@ -47,7 +54,7 @@ export function TodoItem({
           <Link
             href={getTodoHref(todo)}
             className={cn(
-              "text-sm font-medium hover:text-indigo-400",
+              "text-[0.9375rem] font-medium leading-snug tracking-tight hover:text-indigo-300",
               completed && "text-[var(--color-muted)] line-through",
             )}
           >

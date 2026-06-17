@@ -36,7 +36,7 @@ export function TodoQuickCreate({ defaultDueDate }: { defaultDueDate: string }) 
       <div className="flex gap-2">
         <Input
           name="title"
-          placeholder="快速添加今日待办…"
+        placeholder="快速添加待办…"
           required
           maxLength={200}
           className="flex-1"

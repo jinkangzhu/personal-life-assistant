@@ -6,7 +6,12 @@ import { useState, useTransition } from "react";
 import { createReview } from "@/app/(main)/reviews/actions";
 import { MarkdownField } from "@/components/diary/markdown-field";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  ModuleAccent,
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleFormShell,
+} from "@/components/ui/module-ui";
 import { toDateInputValue } from "@/lib/utils";
 
 export function ReviewCreateForm({
@@ -39,23 +44,29 @@ export function ReviewCreateForm({
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <ModuleFormShell>
+      <ModuleAccent module="review" className="mb-8" />
+
+      <form onSubmit={handleSubmit} className="space-y-8">
         <input type="hidden" name="periodDate" value={dateValue} />
 
+        <p className="text-sm leading-relaxed text-[var(--color-muted)]">
+          对照右侧当日数据，写下今天做得好的、需要调整的，以及明天的重点。
+        </p>
+
         <div>
-          <label className="mb-1.5 block text-sm text-[var(--color-muted)]">
-            正文（Markdown）
-          </label>
+          <ModuleFormLabel>复盘正文</ModuleFormLabel>
           <MarkdownField defaultValue={defaultContent} rows={16} />
         </div>
 
         <FormError message={error} />
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "保存中…" : "保存复盘"}
-        </Button>
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "保存中…" : "保存复盘"}
+          </Button>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

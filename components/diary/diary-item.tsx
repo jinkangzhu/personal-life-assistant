@@ -17,12 +17,13 @@ export function DiaryItem({ entry }: { entry: DiaryWithTags }) {
       <Link
         href={`/diary/${entry.id}`}
         className={cn(
-          "group block rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 transition",
+          "group relative block overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3.5 transition",
           "hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]",
         )}
       >
+        <div className="absolute inset-y-0 left-0 w-0.5 bg-rose-400/55" aria-hidden="true" />
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium group-hover:text-indigo-400">
+          <span className="text-[0.9375rem] font-medium leading-snug tracking-tight transition group-hover:text-indigo-300">
             {displayTitle}
           </span>
           {entry.mood && (

@@ -8,7 +8,7 @@ export default async function PlanNewPage() {
   return (
     <PageShell
       title="新建计划"
-      description="设定目标、周期与状态，随后可拆解关联待办"
+      description="设定范围与周期，保存后再拆解关联待办"
       backHref="/plans"
       backLabel="返回列表"
     >

@@ -7,12 +7,16 @@ import { createPlan } from "@/app/(main)/plans/actions";
 import { PlanStatusSelect } from "@/components/plans/plan-status-select";
 import { PlanTypeSelect } from "@/components/plans/plan-type-select";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-
-const textareaClassName =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
+import {
+  ModuleAccent,
+  ModuleFormActions,
+  ModuleFormLabel,
+  ModuleFormSection,
+  ModuleFormShell,
+  ModuleTitleInput,
+  moduleTextareaClassName,
+} from "@/components/ui/module-ui";
 
 export function PlanCreateForm() {
   const router = useRouter();
@@ -40,69 +44,69 @@ export function PlanCreateForm() {
   }
 
   return (
-    <Card className="px-4 py-4">
-      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
+    <ModuleFormShell>
+      <ModuleAccent module="plan" className="mb-8" />
+
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label htmlFor="plan-title" className="mb-1.5 block text-xs text-[var(--color-muted)]">
+          <label htmlFor="plan-title" className="sr-only">
             标题
           </label>
-          <Input
+          <ModuleTitleInput
             id="plan-title"
             name="title"
-            placeholder="计划标题"
+            placeholder="这一步要达成什么？"
             maxLength={200}
             required
+            autoFocus
           />
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-muted)]">
+            例如：三月背完 N2 词汇、搭建个人网站
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="plan-description" className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            描述（可选）
-          </label>
-          <textarea
-            id="plan-description"
-            name="description"
-            rows={4}
-            placeholder="计划目标与背景…"
-            className={textareaClassName}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            类型
-          </label>
-          <PlanTypeSelect key={`type-${formKey}`} />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-            状态
-          </label>
-          <PlanStatusSelect key={`status-${formKey}`} />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
+        <ModuleFormSection>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              开始日期
-            </label>
-            <DatePicker key={`start-${formKey}`} name="startDate" />
+            <ModuleFormLabel htmlFor="plan-description">背景与范围</ModuleFormLabel>
+            <textarea
+              id="plan-description"
+              name="description"
+              rows={4}
+              placeholder="计划覆盖什么？边界在哪里？"
+              className={moduleTextareaClassName}
+            />
           </div>
+
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-muted)]">
-              结束日期
-            </label>
-            <DatePicker key={`end-${formKey}`} name="endDate" />
+            <ModuleFormLabel>类型</ModuleFormLabel>
+            <PlanTypeSelect key={`type-${formKey}`} />
           </div>
-        </div>
+
+          <div>
+            <ModuleFormLabel>当前状态</ModuleFormLabel>
+            <PlanStatusSelect key={`status-${formKey}`} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <ModuleFormLabel>开始日期</ModuleFormLabel>
+              <DatePicker key={`start-${formKey}`} name="startDate" />
+            </div>
+            <div>
+              <ModuleFormLabel>结束日期</ModuleFormLabel>
+              <DatePicker key={`end-${formKey}`} name="endDate" />
+            </div>
+          </div>
+        </ModuleFormSection>
 
         <FormError message={error} />
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "保存中…" : "保存计划"}
-        </Button>
+        <ModuleFormActions>
+          <Button type="submit" disabled={pending} size="lg" className="min-w-28">
+            {pending ? "保存中…" : "保存计划"}
+          </Button>
+        </ModuleFormActions>
       </form>
-    </Card>
+    </ModuleFormShell>
   );
 }

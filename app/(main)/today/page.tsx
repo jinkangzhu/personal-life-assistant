@@ -5,20 +5,15 @@ import { getSmokingStats } from "@/lib/services/smoking";
 import { formatMinutes } from "@/lib/duration";
 import { buildReviewDraft } from "@/lib/services/review";
 import { formatDate, toDateInputValue } from "@/lib/utils";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  EmptyState,
-} from "@/components/ui/card";
+import { ModuleLinkAction, ModulePanel } from "@/components/ui/module-ui";
 import { PageShell } from "@/components/layout/page-shell";
 import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { DiaryQuickCreate } from "@/components/today/diary-quick-create";
 import { SmokingTracker } from "@/components/today/smoking-tracker";
 import { TodoQuickCreate } from "@/components/today/todo-quick-create";
 import { TodoTodayItem } from "@/components/today/todo-today-item";
+import { TodayOverview } from "@/components/today/today-overview";
+import { TodaySection } from "@/components/today/today-section";
 import { PenLine } from "lucide-react";
 
 export default async function TodayPage() {
@@ -34,125 +29,114 @@ export default async function TodayPage() {
     : `/reviews/new?date=${dateValue}`;
   const reviewActionLabel = draft.existingReview ? "查看复盘" : "去复盘";
   const reviewDescription = draft.existingReview
-    ? "今日复盘已创建，点击查看或编辑"
-    : "对照今日待办与日记，写一段复盘";
+    ? "今日复盘已保存，点击查看或继续编辑"
+    : "对照今日待办与日记，写一段简短复盘";
 
   return (
-    <PageShell title="今日" description={formatDate(bundle.date)}>
-      <SmokingTracker stats={smokingStats} dateValue={dateValue} />
+    <PageShell
+      title="今日"
+      description="聚焦今天该完成的事，随手记录想法"
+    >
+      <div className="space-y-6">
+        <p className="text-sm text-[var(--color-muted)]">{formatDate(bundle.date)}</p>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="今日完成" value={String(bundle.stats.completedToday)} />
-        <StatCard label="待办总数" value={String(bundle.stats.totalToday)} />
-        <StatCard
-          label="完成率"
-          value={`${bundle.stats.completionRate}%`}
-          accent
+        <TodayOverview
+          completed={bundle.stats.completedToday}
+          total={bundle.stats.totalToday}
+          completionRate={bundle.stats.completionRate}
         />
-      </div>
 
-      {(bundle.timeStats.totalMinutes > 0 ||
-        bundle.timeStats.estimatedRemainingMinutes > 0) && (
-        <Card size="sm">
-          <CardContent className="pt-0">
-            <p className="mb-2 text-xs font-medium text-[var(--color-muted)]">
+        <SmokingTracker stats={smokingStats} dateValue={dateValue} />
+
+        {(bundle.timeStats.totalMinutes > 0 ||
+          bundle.timeStats.estimatedRemainingMinutes > 0) && (
+          <ModulePanel module="today" className="!py-4">
+            <p className="mb-3 text-xs font-medium tracking-wide text-[var(--color-muted)]">
               今日时长
             </p>
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <p className="text-lg font-semibold text-indigo-400">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+              <p className="font-mono text-xl font-semibold tabular-nums text-indigo-300">
                 {formatMinutes(bundle.timeStats.totalMinutes) || "0m"}
               </p>
               {bundle.timeStats.byActivity.map((item) => (
-                <span key={item.activityTypeId ?? "uncategorized"} className="text-sm">
+                <span
+                  key={item.activityTypeId ?? "uncategorized"}
+                  className="text-sm text-[var(--color-muted)]"
+                >
                   {item.name} {formatMinutes(item.minutes)}
                 </span>
               ))}
             </div>
             {bundle.timeStats.estimatedRemainingMinutes > 0 && (
-              <p className="mt-2 text-xs text-[var(--color-muted)]">
+              <p className="mt-3 text-xs text-[var(--color-muted)]">
                 剩余预估 {formatMinutes(bundle.timeStats.estimatedRemainingMinutes)}
               </p>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </ModulePanel>
+        )}
 
-      <Card size="sm">
-        <CardContent className="pt-0">
-          <p className="mb-2 text-xs font-medium text-[var(--color-muted)]">
+        <ModulePanel module="todo" className="!py-4">
+          <p className="mb-3 text-xs font-medium tracking-wide text-[var(--color-muted)]">
             快速添加待办
           </p>
           <TodoQuickCreate defaultDueDate={dateValue} />
-        </CardContent>
-      </Card>
+        </ModulePanel>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>今日截止</CardTitle>
-              <CardAction>
-                <Link
-                  href="/todos?filter=today"
-                  className="text-xs text-indigo-400 hover:text-indigo-300"
-                >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <TodaySection
+              module="todo"
+              title="今日截止"
+              action={
+                <ModuleLinkAction href="/todos?filter=today">
                   查看全部 →
-                </Link>
-              </CardAction>
-            </CardHeader>
-
-            {bundle.todayDueTodos.length === 0 ? (
-              <EmptyState
-                title="今日暂无截止待办"
-                description="用上方输入框快速添加"
-              />
-            ) : (
-              <CardContent className="space-y-2 pt-0">
+                </ModuleLinkAction>
+              }
+            >
+              {bundle.todayDueTodos.length === 0 ? (
+                <p className="text-sm text-[var(--color-muted)]">
+                  今日暂无截止待办，用上方输入框快速添加
+                </p>
+              ) : (
                 <ul className="space-y-2">
                   {bundle.todayDueTodos.map((todo) => (
                     <TodoTodayItem key={todo.id} todo={todo} />
                   ))}
                 </ul>
-              </CardContent>
-            )}
-          </Card>
+              )}
+            </TodaySection>
 
-          <Card hover className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4 px-4 sm:px-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600/15 text-indigo-400">
-                <PenLine className="h-5 w-5" />
+            <ModulePanel module="review" className="!py-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600/15 text-indigo-400">
+                    <PenLine className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {draft.existingReview ? "今日复盘" : "写今日复盘"}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-[var(--color-muted)]">
+                      {reviewDescription}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={reviewHref}
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--color-border)] px-4 text-sm font-medium transition hover:bg-[var(--color-card-hover)] sm:shrink-0"
+                >
+                  {reviewActionLabel}
+                </Link>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {draft.existingReview ? "今日复盘" : "创建今日复盘"}
-                </p>
-                <p className="text-xs text-[var(--color-muted)]">
-                  {reviewDescription}
-                </p>
-              </div>
-            </div>
-            <div className="px-4 pb-4 sm:p-0">
-              <Link
-                href={reviewHref}
-                className="inline-flex h-8 w-full items-center justify-center rounded-lg border border-[var(--color-border)] bg-transparent px-4 text-sm font-medium transition hover:bg-[var(--color-card-hover)] sm:w-auto"
+            </ModulePanel>
+
+            {bundle.overdueTodos.length > 0 && (
+              <TodaySection
+                module="todo"
+                title="历史未完成"
+                description={`${bundle.overdueCount} 项待处理`}
+                tone="warning"
               >
-                {reviewActionLabel}
-              </Link>
-            </div>
-          </Card>
-
-          {bundle.overdueTodos.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-amber-400">历史未完成</CardTitle>
-                <CardAction>
-                  <span className="text-xs text-amber-400/80">
-                    {bundle.overdueCount} 项
-                  </span>
-                </CardAction>
-              </CardHeader>
-
-              <CardContent className="space-y-2 pt-0">
                 <ul className="space-y-2">
                   {bundle.overdueTodos.map((todo) => (
                     <TodoTodayItem
@@ -162,47 +146,42 @@ export default async function TodayPage() {
                     />
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </TodaySection>
+            )}
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>今日日记</CardTitle>
-            <CardAction>
-              <Link
-                href="/diary/new"
-                className="text-xs text-indigo-400 hover:text-indigo-300"
-              >
-                完整编辑 →
-              </Link>
-            </CardAction>
-          </CardHeader>
+          <TodaySection
+            module="diary"
+            title="今日日记"
+            action={
+              <ModuleLinkAction href="/diary/new">完整编辑 →</ModuleLinkAction>
+            }
+          >
+            <div className="mb-5 border-b border-[var(--color-border)]/70 pb-5">
+              <p className="mb-2 text-xs font-medium tracking-wide text-[var(--color-muted)]">
+                快速记录
+              </p>
+              <DiaryQuickCreate defaultDate={dateValue} />
+            </div>
 
-          <CardContent className="border-b border-[var(--color-border)] pb-4">
-            <p className="mb-2 text-xs font-medium text-[var(--color-muted)]">
-              快速写日记
-            </p>
-            <DiaryQuickCreate defaultDate={dateValue} />
-          </CardContent>
-
-          {bundle.diaryEntries.length === 0 ? (
-            <EmptyState
-              title="今日还没有日记"
-              description="记录今天的学习、生活与想法"
-            />
-          ) : (
-            <CardContent className="space-y-3 pt-0">
-              <ul className="space-y-3">
+            {bundle.diaryEntries.length === 0 ? (
+              <p className="text-sm text-[var(--color-muted)]">
+                今天还没有日记，用上方框随手记几句
+              </p>
+            ) : (
+              <ul className="space-y-2.5">
                 {bundle.diaryEntries.map((entry) => (
                   <li key={entry.id}>
                     <Link
                       href={`/diary/${entry.id}`}
-                      className="group block rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-3 transition hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]"
+                      className="group relative block overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]/50 p-3.5 pl-4 transition hover:border-indigo-500/20 hover:bg-[var(--color-card-hover)]"
                     >
+                      <div
+                        className="absolute inset-y-0 left-0 w-0.5 bg-rose-400/55"
+                        aria-hidden="true"
+                      />
                       {entry.title && (
-                        <p className="mb-1 text-sm font-medium group-hover:text-indigo-400">
+                        <p className="mb-1 text-sm font-medium leading-snug group-hover:text-indigo-300">
                           {entry.title}
                         </p>
                       )}
@@ -211,33 +190,10 @@ export default async function TodayPage() {
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          )}
-        </Card>
+            )}
+          </TodaySection>
+        </div>
       </div>
     </PageShell>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <Card size="sm">
-      <CardContent className="pt-0">
-        <p className="text-xs text-[var(--color-muted)]">{label}</p>
-        <p
-          className={`mt-1 text-2xl font-semibold ${accent ? "text-indigo-400" : ""}`}
-        >
-          {value}
-        </p>
-      </CardContent>
-    </Card>
   );
 }
